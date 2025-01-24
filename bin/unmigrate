@@ -1,0 +1,96 @@
+#!/bin/bash
+
+function help {
+  echo "$(basename "$0") - Move matching files from Git LFS to Git.
+By default, only files in the current directory that match one of the
+specified filetypes are processed.
+
+This process does not rewrite Git history, so other Git users will not need
+to re-clone the repository after this process concludes.
+
+This process might take a long time if you have a lot of large files to
+unmigrate back to Git.
+
+Syntax:
+  $(basename "$0") [OPTIONS] PATTERN ...
+
+  OPTIONS are:
+    -c Expand pattern to upper and lower case, helpful for media files
+    -d Dry run (display filename patterns that would be affected)
+    -e Apply the pattern everywhere (all directories in the Git repository)
+
+Examples:
+  $ $(basename "$0") -d zip
+  DRY RUN: git lfs untrack *.zip
+
+  $ $(basename "$0") -d pdf zip
+  DRY RUN: git lfs untrack *.pdf
+  DRY RUN: git lfs untrack *.zip
+
+  $ $(basename "$0") -dc mp3
+  DRY RUN: git lfs untrack *.mp3 *.MP3
+
+  $ $(basename "$0") unmigrate -dc mp3 mp4
+  DRY RUN: git lfs untrack *.mp3 *.MP3
+  DRY RUN: git lfs untrack *.mp4 *.MP4
+
+  $ $(basename "$0") -de zip
+  DRY RUN: git lfs untrack *.zip **/*.zip
+
+  $ $(basename "$0") -dce mp3
+  DRY RUN: git lfs untrack *.mp3 *.MP3 **/*.mp3 **/*.MP3
+
+  $ $(basename "$0") -dce mp3 mp4
+  DRY RUN: git lfs untrack *.mp3 *.MP3 **/*.mp3 **/*.MP3
+  DRY RUN: git lfs untrack *.mp4 *.MP4 **/*.mp4 **/*.MP4
+
+See also: ls-files, track, and untrack.
+"
+  exit 1
+}
+
+function expand {
+  if [ "$BOTH_CASES" ]; then
+    LC="${1,,}"
+    UC="${1^^}"
+    if [ "$EVERYWHERE" ]; then
+      echo "*.$LC *.$UC **/*.$LC **/*.$UC"
+    else
+      echo "*.$LC *.$UC"
+    fi
+  else
+    if [ "$EVERYWHERE" ]; then
+      echo "*.$1 **/*.$1"
+    else
+      echo "*.$1"
+    fi
+  fi
+}
+
+unset BOTH_CASES DRY_RUN EVERYWHERE
+while getopts "cdeh" opt; do
+   case $opt in
+       c ) BOTH_CASES=true ;;
+       d ) DRY_RUN=true ;;
+       e ) EVERYWHERE=true ;;
+       h ) help ;;
+       [?]) help ;;
+   esac
+done
+shift "$(($OPTIND-1))"
+
+if [ -z "$1" ]; then help; fi
+
+if [ "$DRY_RUN" ]; then
+  for PAT in "$@"; do
+    echo "DRY RUN: git lfs untrack $( expand "$PAT" )"
+  done
+  exit 0
+fi
+
+for PAT in "$@"; do
+  git lfs untrack "$(expand "$PAT")"
+done
+git add --renormalize .
+git commit -m "Restore '$PAT' to Git from Git LFS"
+git push

@@ -1,0 +1,57 @@
+#!/bin/bash
+
+function help {
+  if [ "$1" ]; then echo "$1"; fi
+  echo "$(basename "$0") - Create a new bare git repository.
+
+Syntax: $(basename "$0") /path/to/new/repo
+
+A new git repository will be created in /path/to/new/repo,
+which should not already exist.
+The parent directory (/path/to/new/) must already exist.
+The name of the repo must not contain spaces.
+
+After creation, a new environment variable will be created
+in /etc/environment.
+The name that you specified ('repo' in the above example) will be used
+for the name of a new environment variable, set to the path that
+you specified.
+"
+  exit 1
+}
+
+function configure {
+  git config receive.denyCurrentBranch ignore
+}
+
+function initialize {
+  echo "$REPO_NAME=$REPO_PATH/$REPO_NAME" | \
+    sudo tee -a /etc/environment > /dev/null
+
+  echo "Making an empty bare Git repository in $REPO_PATH/$REPO_NAME"
+  mkdir --mode=g+s "$REPO_PATH/$REPO_NAME"
+  sudo chgrp git_access test_repo2.git
+  git init --bare --shared=everybody "$REPO_PATH/$REPO_NAME"
+}
+
+function report {
+  if [ "$( which tree )" ]; then
+    echo "The new repository contains the following subdirectory tree"
+    tree -d
+  fi
+  echo "The bare repository was created in '$( pwd )'."
+}
+
+
+if [ -z "$1" ]; then help; fi
+
+cd "$1" || exit 1
+export REPO_PATH="$( dirname "$(pwd)" )"
+export REPO_NAME="$( basename "$1" )"
+if [ -f "$REPO_PATH/$REPO_NAME" ]; then help "Error: '$PATH/$REPO_NAME' already exists."; fi
+
+initialize "$1"
+cd "$REPO_PATH/$REPO_NAME" || exit 3
+configure
+report
+echo "All done!"

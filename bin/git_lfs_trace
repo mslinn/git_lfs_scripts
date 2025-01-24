@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+
+# This script handles the init, upload, download, and terminate events.
+# You can extend it for other events as needed.
+# Logging includes the full details of each request and response in JSON format for clarity.
+# Adjust the simulated responses as needed to match your server's behavior or testing requirements.
+
+require 'json'
+
+# Custom logger to display requests and responses
+class GitLFSLogger
+  def self.log_request(request)
+    puts "\n== Request =="
+    puts JSON.pretty_generate(request)
+    puts "================\n"
+  end
+
+  def self.log_response(response)
+    puts "\n== Response =="
+    puts JSON.pretty_generate(response)
+    puts "================\n"
+  end
+end
+
+# Git LFS custom transfer adapter
+class GitLFSTransferAdapter
+  def initialize
+    @input = $stdin
+    @output = $stdout
+  end
+
+  def run
+    @output.sync = true # Ensure output is flushed immediately
+    loop do
+      line = @input.gets&.strip
+      break unless line
+
+      request = begin
+        JSON.parse(line)
+      rescue StandardError
+        nil
+      end
+      next unless request # Skip invalid JSON
+
+      GitLFSLogger.log_request(request)
+
+      # Handle the request and generate a response
+      response = handle_request(request)
+
+      GitLFSLogger.log_response(response)
+
+      # Write the response to stdout
+      @output.puts response.to_json
+    end
+  end
+
+  private
+
+  # Handles Git LFS transfer requests
+  def handle_request(request)
+    case request['event']
+    when 'init'
+      # Initialization event
+      { event: 'init', success: true }
+    when 'terminate'
+      # Termination event
+      { event: 'terminate', success: true }
+    when 'upload'
+      # Upload object event
+      handle_upload(request)
+    when 'download'
+      # Download object event
+      handle_download(request)
+    else
+      # Unsupported event
+      { event: request['event'], success: false, error: 'Unsupported event' }
+    end
+  end
+
+  # Handle upload requests
+  def handle_upload(request)
+    object = request['objects']&.first
+    return { event: 'upload', success: false, error: 'No object specified' } unless object
+
+    oid = object['oid']
+    size = object['size']
+
+    # Simulate a successful upload
+    {
+      event:   'upload',
+      success: true,
+      objects: [{ oid: oid, size: size, actions: { upload: { href: "https://example.com/upload/#{oid}" } } }],
+    }
+  end
+
+  # Handle download requests
+  def handle_download(request)
+    object = request['objects']&.first
+    return { event: 'download', success: false, error: 'No object specified' } unless object
+
+    oid = object['oid']
+    size = object['size']
+
+    # Simulate a successful download
+    {
+      event:   'download',
+      success: true,
+      objects: [{ oid: oid, size: size, actions: { download: { href: "https://example.com/download/#{oid}" } } }],
+    }
+  end
+end
+
+# Main entry point
+if __FILE__ == $PROGRAM_NAME
+  adapter = GitLFSTransferAdapter.new
+  adapter.run
+end

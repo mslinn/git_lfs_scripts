@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# For evaluating Git LFS servers and client configurations
+# Clones the git repo for a evaluation scenario
+# See https://www.mslinn.com/git/5600-git-lfs-evaluation.html#evaluation_procedure
+# See http://localhost:4001/git/5700-git-lfs-bare.html
+
+function help {
+  if [ "$1" ]; then printf "$1\n\n"; fi
+  echo "$( basename "$0" ) - Clone git repo for a given evaluation scenario
+
+Syntax: $( basename "$0" ) SCENARIO_NUMBER GIT_URL LFS_URL
+Where:
+  SCENARIO_NUMBER can range from 1 to 9, inclusive.
+  GIT_URL points to the server-side Git repo.
+  LFS_URL must be of the form:
+    http://my_lfs_server/api/my_org/my_repo
+#          ───────┬───── ─┬─ ──┬─── ───┬───
+#                 │       │    │       └ The name of your project
+#                 │       │    └ Your organization name
+#                 │       └ Standard value is 'api'
+#                 └ The host name and port of your LSF server
+
+A git repository called 'scenario' with the SCENARIO_NUMBER appended will be
+created under the \"\$work\" directory, which must exist.
+
+Example:
+$( basename "$0" ) 1 \
+  /mnt/gojira_mslinn/eval_repos/repo1.git \
+  /mnt/gojira_mslinn/eval_repos/repo1.lfs
+"
+  exit
+}
+
+function initialize {
+  git clone "$GIT_URL"
+
+  # Ensure the git lfs extension filters are defined, and the repo's pre-commit hooks are installed.
+  git lfs install
+  git config -f .lfsconfig lfs.url "$LFS_URL"
+}
+
+function populate {
+  echo "Creating README.md"
+  printf "# Scenario $SCENARIO\nThis is a normal file.\n" > README.md
+
+  echo "Copying '$work/git/git_lfs_test_data/'"
+  rsync rsync -at --progress "$work/git/git_lfs_test_data/" ./
+}
+
+
+# Sanity checks
+if [ -z "$1" ]; then help "Error: Please provide the number of the scenario being tested."; fi
+if (( "$1" < 1 )); then help "Error: Invalid scenario number"; fi
+export SCENARIO="$1"
+
+if [ -z "$2" ]; then help "Error: Please provide git.url for scenario $1."; fi
+export GIT_URL="$2"
+
+if [ -z "$3" ]; then help "Error: Please provide lfs.url for scenario $1."; fi
+export LFS_URL="$3"
+
+if [ -z "$work" ]; then help "Error: the \"\$work\" directory is undefined."; fi
+if [ ! -d "$work/git/git_lfs_test_data/" ]; then
+  echo "Error: directory '$work/git/git_lfs_test_data/' does not exist."
+  exit 3
+fi
+if [ -d "$work/git/scenario$1/" ]; then
+  # shellcheck disable=SC2086
+  echo "Error: directory "$work/git/scenario$1/" already exists."
+  exit 2
+fi
+
+
+initialize
+populate

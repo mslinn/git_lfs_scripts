@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source /opt/giftless/.venv/bin/activate
+
+uwsgi \
+  --master \
+  --threads 2 \
+  --processes 2 \
+  --manage-script-name \
+  --module giftless.wsgi_entrypoint \
+  --callable app \
+  --http 0.0.0.0:9876
+
+# The above options mean:
+# --master              Enable the master process
+# --threads             Run each worker in prethreaded mode with the specified number of threads
+# --processes           Spawn the specified number of workers/processes
+# --manage-script-name  Automatically rewrite SCRIPT_NAME and PATH_INFO
+# --module              Load the specified WSGI module
+# --callable            Set the default WSGI callable name
+# --http                Add an http router/server on the specified address and port.
+#                       Address 0.0.0.0 means to bind to all IP addresses.
