@@ -24,7 +24,7 @@ mkdir -p v1 && cd v1 || exit 1
 cat <<EOF >.gitignore
 .cksum_output
 EOF
-
+echo "This is README.md v1" > README.md
 download https://download.blender.org/peach/bigbuckbunny_movies BigBuckBunny_640x360.m4v       video1.m4v
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_480p_h264.mov   video2.mov
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_480p_stereo.avi video3.avi
@@ -35,6 +35,7 @@ download https://files.testfile.org/PDF                         100MB-TESTFILE.O
 
 # files for git update
 cd - && mkdir -p v2 && cd v2 || exit 1
+echo "This is README.md v2" > README.md
 download http://ipv4.download.thinkbroadband.com                200MB.zip                      zip1.zip
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_720p_h264.mov   video2.mov
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_720p_stereo.avi video3.avi
