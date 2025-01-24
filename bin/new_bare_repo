@@ -6,8 +6,9 @@ function help {
 
 Syntax: $(basename "$0") /path/to/new/repo
 
-A new git repository will be created in /path/to/new/repo,
+A new Git repository will be created in /path/to/new/repo,
 which should not already exist.
+The SGID permission for the new Git repository will be set.
 The parent directory (/path/to/new/) must already exist.
 The name of the repo must not contain spaces.
 
