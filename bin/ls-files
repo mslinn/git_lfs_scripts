@@ -171,5 +171,5 @@ done
 if [ -z "$1" ] &&
    [ "$SCRIPT_NAME" == "ls-files" ] ||
    [ "$SCRIPT_NAME" == "lfs-files" ]; then
-  $CMD -s
+  $CMD
 fi
