@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Lists files that are not managed by Git LFS in the current repository
+
 function cleanup {
   if [ "$ALL_FILES" ]; then rm "$ALL_FILES"; fi
   if [ "$LSF_FILES" ]; then rm "$LSF_FILES"; fi
