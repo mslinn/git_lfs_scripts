@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PORT=9874
+export LFS_LISTEN="tcp://:$PORT"
+export LFS_HOST="gojira:$PORT"
+
+cd /opt/lfs-test-server || exit 1
+lfs-test-server
