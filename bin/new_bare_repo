@@ -44,11 +44,10 @@ function report {
 
 if [ -z "$1" ]; then help; fi
 
-mkdir -p "$1"
-cd "$1" || exit 1
 export REPO_PATH="$( dirname "$(pwd)" )"
 export REPO_NAME="$( basename "$1" )"
-if [ -f "$REPO_PATH/$REPO_NAME" ]; then help "Error: '$PATH/$REPO_NAME' already exists."; fi
+if [ -f "$REPO_PATH/$REPO_NAME" ]; then help "Error: '$REPO_PATH/$REPO_NAME' already exists."; fi
+cd "$REPO_PATH" || exit 1
 
 initialize "$1"
 cd "$REPO_PATH/$REPO_NAME" || exit 3
