@@ -2,24 +2,22 @@
 
 function help {
   if [ "$1" ]; then echo "$1"; fi
-  echo "$(basename "$0") - Create a new bare git repository.
+  echo "$(basename "$0") - Create a new bare Git repository.
 
 Syntax: $(basename "$0") /path/to/new/repo
 
-# The new git repository is placed in "$work/git/original_repo",
-# and is copied to gojira:eval_lfs/original_repos/normal_repo.
+Normally this script would be run on a Git server, because
+that is where bare Git repositories normally live.
 
 A new Git repository will be created in /path/to/new/repo,
 which should not already exist.
+
 The SGID permission for the new Git repository will be set.
+
 The parent directory (/path/to/new/) must already exist.
 The name of the repo must not contain spaces.
 
-After creation, a new environment variable will be created
-in /etc/environment.
-The name that you specified ('repo' in the above example) will be used
-for the name of a new environment variable, set to the path that
-you specified.
+Git configuration parameter 'receive.denyCurrentBranch' is set to ignore.
 "
   exit 1
 }
@@ -29,9 +27,6 @@ function configure {
 }
 
 function initialize {
-  echo "$REPO_NAME=$REPO_PATH/$REPO_NAME" | \
-    sudo tee -a /etc/environment > /dev/null
-
   echo "Making an empty bare Git repository in $REPO_PATH/$REPO_NAME"
   mkdir --mode=g+s "$REPO_PATH/$REPO_NAME"
   sudo chgrp git_access test_repo2.git
@@ -39,10 +34,10 @@ function initialize {
 }
 
 function report {
-  if [ "$( which tree )" ]; then
-    echo "The new repository contains the following subdirectory tree"
-    tree -d
-  fi
+  # if [ "$( which tree )" ]; then
+  #   echo "The new repository contains the following subdirectory tree"
+  #   tree -d
+  # fi
   echo "The bare repository was created in '$( pwd )'."
 }
 
@@ -58,4 +53,3 @@ initialize "$1"
 cd "$REPO_PATH/$REPO_NAME" || exit 3
 configure
 report
-echo "All done!"

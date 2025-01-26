@@ -6,7 +6,7 @@
 
 function help {
   if [ "$1" ]; then printf "$1\n\n"; fi
-  echo "$(basename "$0") clones a bare git repository for testing Git LFS null server scenarios.
+  echo "$(basename "$0") creates a bare git repository for testing Git LFS null server scenarios.
 See http://localhost:4001/git/5700-git-lfs-bare.html
 
 Syntax: $(basename "$0") repo_name
