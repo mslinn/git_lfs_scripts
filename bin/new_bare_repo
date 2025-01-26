@@ -4,18 +4,19 @@ function help {
   if [ "$1" ]; then echo "$1"; fi
   echo "$(basename "$0") - Create a new bare Git repository.
 
-Syntax: $(basename "$0") /path/to/new/repo
+Syntax: $(basename "$0") /path/to/new/repo.git
 
 Normally this script would be run on a Git server, because
 that is where bare Git repositories normally live.
 
-A new Git repository will be created in /path/to/new/repo,
+A new Git repository will be created in /path/to/new/repo.git,
 which should not already exist.
 
 The SGID permission for the new Git repository will be set.
 
 The parent directory (/path/to/new/) will be created if it does not already exist.
 The name of the repo must not contain spaces.
+If the specified name does not end with a .git suffix, the suffix is appended.
 
 Git configuration parameter 'receive.denyCurrentBranch' is set to ignore.
 "
@@ -29,7 +30,7 @@ function configure {
 function initialize {
   echo "Making an empty bare Git repository in $REPO_PATH/$REPO_NAME"
   mkdir --mode=g+s "$REPO_PATH/$REPO_NAME"
-  sudo chgrp git_access test_repo2.git
+  sudo chgrp git_access $REPO_NAME
   git init --bare --shared=everybody "$REPO_PATH/$REPO_NAME"
 }
 
@@ -46,6 +47,7 @@ if [ -z "$1" ]; then help; fi
 
 export REPO_PATH="$( dirname "$(pwd)" )"
 export REPO_NAME="$( basename "$1" )"
+if [[ "$REPO_NAME" != *.git ]]; then export REPO_NAME="$REPO_NAME.git"; fi
 if [ -f "$REPO_PATH/$REPO_NAME" ]; then help "Error: '$REPO_PATH/$REPO_NAME' already exists."; fi
 cd "$REPO_PATH" || exit 1
 
