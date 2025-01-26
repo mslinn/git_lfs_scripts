@@ -4,7 +4,7 @@
 # Run this script on the client that should hold the original copy of the
 # git repository used to evaluate a scenario.
 # The new git repository is placed in "$work/git/scenarioN",
-# where N is the scenario number.
+# where N is the scenario number. The scenario determines lfs.url.
 
 function help {
   if [ "$1" ]; then printf "$1\n\n"; fi
@@ -23,6 +23,15 @@ Where:
 Scenarios 1 and 2 exercise bare git repositories, created by newBareRepo.
 "
   exit
+}
+
+# @param $1 index origin 1
+function lfs_url {
+  urls=(
+    "/mnt/server_repos/scenario1.lfs"
+    "gojira:/eval_repos/scenario2.lfs"
+  )
+  echo "${urls[$1]}"
 }
 
 function doit {
