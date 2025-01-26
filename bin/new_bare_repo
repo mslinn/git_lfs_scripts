@@ -14,7 +14,7 @@ which should not already exist.
 
 The SGID permission for the new Git repository will be set.
 
-The parent directory (/path/to/new/) must already exist.
+The parent directory (/path/to/new/) will be created if it does not already exist.
 The name of the repo must not contain spaces.
 
 Git configuration parameter 'receive.denyCurrentBranch' is set to ignore.
@@ -44,6 +44,7 @@ function report {
 
 if [ -z "$1" ]; then help; fi
 
+mkdir -p "$1"
 cd "$1" || exit 1
 export REPO_PATH="$( dirname "$(pwd)" )"
 export REPO_NAME="$( basename "$1" )"
