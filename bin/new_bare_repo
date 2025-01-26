@@ -45,7 +45,7 @@ function report {
 
 if [ -z "$1" ]; then help; fi
 
-export REPO_PATH="$( dirname "$(pwd)" )"
+export REPO_PATH="$( dirname "$1" )"
 export REPO_NAME="$( basename "$1" )"
 if [[ "$REPO_NAME" != *.git ]]; then export REPO_NAME="$REPO_NAME.git"; fi
 if [ -f "$REPO_PATH/$REPO_NAME" ]; then help "Error: '$REPO_PATH/$REPO_NAME' already exists."; fi
