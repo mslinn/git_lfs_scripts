@@ -6,6 +6,9 @@ function help {
 
 Syntax: $(basename "$0") /path/to/new/repo
 
+# The new git repository is placed in "$work/git/original_repo",
+# and is copied to gojira:eval_lfs/original_repos/normal_repo.
+
 A new Git repository will be created in /path/to/new/repo,
 which should not already exist.
 The SGID permission for the new Git repository will be set.

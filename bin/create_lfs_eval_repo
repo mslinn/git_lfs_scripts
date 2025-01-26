@@ -1,10 +1,11 @@
 #!/bin/bash
 
-#
 # Run this script on the client that should hold the original copy of the
-# git repository used to evaluate a scenario.
-# The new git repository is placed in "$work/git/scenarioN",
-# where N is the scenario number. The scenario determines lfs.url.
+# git repository used to evaluate all Git LFS servers.
+# Initializes the new repo, but does not set origin.url or lfs.url.
+#
+# The new git repository is placed in "$work/git/original_repo",
+# and is copied to gojira:lfs_eval/original_repos/normal_repo.
 
 function help {
   if [ "$1" ]; then printf "$1\n\n"; fi

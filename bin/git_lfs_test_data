@@ -19,12 +19,12 @@ function download {
     "$URL_DIR/$FNAME"
 }
 
-# Files for initial population
-mkdir -p v1 && cd v1 || exit 1
+# Files for step 1
+mkdir -p step1 && cd step1 || exit 1
 cat <<EOF >.gitignore
 .cksum_output
 EOF
-echo "This is README.md v1" > README.md
+echo "This is README.md for step 1" > README.md
 download https://download.blender.org/peach/bigbuckbunny_movies BigBuckBunny_640x360.m4v       video1.m4v
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_480p_h264.mov   video2.mov
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_480p_stereo.avi video3.avi
@@ -33,21 +33,32 @@ download https://mattmahoney.net/dc                             enwik9.zip      
 download https://www.gutenberg.org/cache/epub/feeds             rdf-files.tar.zip              zip2.zip
 download https://files.testfile.org/PDF                         100MB-TESTFILE.ORG.pdf         pdf1.pdf
 
-# files for git update
-cd - && mkdir -p v2 && cd v2 || exit 1
-echo "This is README.md v2" > README.md
+# Files for step 2
+cd - && mkdir -p step2 && cd step2 || exit 1
+echo "This is README.md for step 2" > README.md
 download http://ipv4.download.thinkbroadband.com                200MB.zip                      zip1.zip
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_720p_h264.mov   video2.mov
 download https://download.blender.org/peach/bigbuckbunny_movies big_buck_bunny_720p_stereo.avi video3.avi
 download https://files.testfile.org/PDF                         200MB-TESTFILE.ORG.pdf         pdf1.pdf
 
+# Files for step 3
+cd - && mkdir -p step3 && cd step3 || exit 1
+echo "This is README.md for step 3" > README.md
+
 printf "\nDownload complete.\n"
 printf "Here are lists of the initial set of downloaded files and sizes,\n"
 printf "ordered by name. The last line in each listing shows the total\n"
 printf "size of the files.\n\n"
-cd ../v1  || exit 1
+printf "Some files might be deleted by each step; those are not shown here.\n\n"
+
+printf "\nStep 1:\n"
+cd ../step1  || exit 1
 du -ah | sed s^./^^
 
-printf "\nThe files for testing updates are:\n"
-cd ../v2 || exit 1
+printf "\nStep 2:\n"
+cd ../step2 || exit 1
+du -ah | sed s^./^^
+
+printf "\nStep 3:\n"
+cd ../step3 || exit 1
 du -ah | sed s^./^^
