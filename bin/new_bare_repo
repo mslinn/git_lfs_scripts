@@ -28,20 +28,10 @@ function configure {
 }
 
 function initialize {
-  echo "Making an empty bare Git repository in $REPO_PATH/$REPO_NAME"
   mkdir --mode=g+s "$REPO_PATH/$REPO_NAME"
   sudo chgrp git_access $REPO_NAME
   git init --bare --shared=everybody "$REPO_PATH/$REPO_NAME"
 }
-
-function report {
-  # if [ "$( which tree )" ]; then
-  #   echo "The new repository contains the following subdirectory tree"
-  #   tree -d
-  # fi
-  echo "The bare repository was created in '$( pwd )'."
-}
-
 
 if [ -z "$1" ]; then help; fi
 
@@ -54,4 +44,3 @@ cd "$REPO_PATH" || exit 1
 initialize "$1"
 cd "$REPO_PATH/$REPO_NAME" || exit 3
 configure
-report
