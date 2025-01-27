@@ -12,7 +12,8 @@ that is where bare Git repositories normally live.
 A new Git repository will be created in /path/to/new/repo.git,
 which should not already exist.
 
-The SGID permission for the new Git repository will be set.
+The SGID permission for the new Git repository will be set for group git_access,
+which is created if it does not exist.
 
 The parent directory (/path/to/new/) will be created if it does not already exist.
 The name of the repo must not contain spaces.
@@ -34,6 +35,10 @@ function initialize {
 }
 
 if [ -z "$1" ]; then help; fi
+
+if [ "$(getent group admin)" ]; then
+  sudo groupadd git_access
+fi
 
 export REPO_PATH="$( dirname "$1" )"
 export REPO_NAME="$( basename "$1" )"

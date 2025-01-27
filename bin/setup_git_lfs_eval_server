@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Calls other scripts to create directory structures
+# for each evaluation scenario, including bare Git repositories and Git LFS
+# repositories
+
+
+# Customize LFS_EVAL to suit your environment
+function etc_environment {
+  sudo bash <<"EOF"
+cat <<"DOF" >> /etc/environment
+LFS_EVAL=/home/mslinn/lfs_eval
+LFS_DATA=$LFS_EVAL/eval_data
+LFS_SCENARIOS=$LFS_EVAL/scenarios
+DOF
+EOF
+  source /etc/environment
+}
+
+source /etc/environment
