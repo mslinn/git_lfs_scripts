@@ -5,6 +5,18 @@ These scripts were written along with the miniseries of articles about
 The articles explain how to install and use these scripts.
 
 
+## Commands
+
+* `checksums` Computes and / or compares CRCs with previous values
+* `set_remotes` Saves `remotes.origin.url` and `lfs.url`
+* `giftless` Run `giftless` server
+* `git_lfs_test_data` Downloads test data and synthesizes small files
+* `ls-files` Frontend for `git ls-files`
+* `new_bare_repo` Creates a bare repo
+* `nonlfs` lists files that are not in Git LFS
+* `unmigrate` Reverses `git lfs migrate import` for a given wildmatch pattern
+
+
 ## Installation
 
 ```shell
