@@ -1,0 +1,14 @@
+---
+description: Unit tests
+globs:
+alwaysApply: true
+---
+
+# Rule Content Section
+
+- Write unit tests for every feature.
+- Generate enough unit tests to make provable assumptions about the code.
+- Generate assertions throughout the code to verify assumptions are always met.
+- Do not assume you are able to follow complex logic or class inheritance behavior; instead, believe the results of unit tests.
+- For every method, always test expected value ranges.
+- Every code project needs a logging facility that is used for all user dialog and debug output.

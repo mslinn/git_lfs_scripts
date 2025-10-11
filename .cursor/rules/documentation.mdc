@@ -1,0 +1,9 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Documentation
+
+- Always generate inline documentation for every method.

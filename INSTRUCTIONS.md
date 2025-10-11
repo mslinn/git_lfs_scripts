@@ -1,4 +1,4 @@
-# Instructions for Gemini Code Assist
+# Instructions for AI assistant
 
 My development server shows the work in progress of a subproject of my website at
 `http://localhost:4001/git/index.html`.
@@ -46,5 +46,5 @@ In a later step, which you are not authorized to perform yet,
 we will update the articles so the plan is explained to users at a medium level of detail,
 and maintain consistency throughout.
 
-Once the documentation and the test scripts make sense to me, I will run and debug them.
+Once the documentation and the test scripts make sense to me, we will run and debug them.
 Ensure the scripts support debug output; I favor `-d` as a flag for enabling debug output.
