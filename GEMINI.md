@@ -1,10 +1,12 @@
+# Instructions for Gemini Code Assist
+
 My development server shows the work in progress of a subproject of my website at
 `http://localhost:4001/git/index.html`.
 The public version of that same page is viewable at `https://mslinn.com/git/index.html`.
 The source of these websites is on this machine at
 `/var/sitesUbuntu/www.mslinn.com/collections/_git`
 
-We will be modifying the local copy of the website in a new branch called `gemini`.
+We will be modifying the local copy of the website in the branch called `gemini`.
 
 On the aforementioned web page, under the heading "Git Large File System":
 
@@ -15,7 +17,7 @@ On the aforementioned web page, under the heading "Git Large File System":
 
 The test software at `https://github.com/mslinn/git_lfs_scripts` is stored locally as
 `/mnt/f/work/git/git_lfs_scripts`.
-We will be modifying the local copy of the `git_lfs_scripts` in a new branch called `gemini`.
+We will be modifying the local copy of the `git_lfs_scripts` in a branch called `gemini`.
 
 - Currently, `git_lfs_scripts` is mostly written in Bash with some Ruby,
   but those languages seems like poor choices for the data collection and reporting
@@ -33,10 +35,16 @@ These pointless scenarios need to be culled; this includes modifications to scri
 The scenarios are constructed with Liquid in the file
 `/var/sitesUbuntu/www.mslinn.com/_includes/gitScenarios.html`
 
-When you read that file, notice `{% if include.show_explanation %}` this portion because it is important `{% endif %}`
+When you read that file, pay special attention to the instructions between
+`{% if include.show_explanation %}` and `{% endif %}`.
 
-I would like you to verify and complete the test plan, update the articles so the plan is explained to users at a medium level of detail, and maintain consistency throughout. Ask me questions to clarify the requirements.
+I would like you to verify and discuss with me how to complete the test plan.
+Ask me questions to clarify the requirements.
 Do not make any edits until we reach agreement that the requirements are properly stated.
+
+In a later step, which you are not authorized to perform yet,
+we will update the articles so the plan is explained to users at a medium level of detail,
+and maintain consistency throughout.
 
 Once the documentation and the test scripts make sense to me, I will run and debug them.
 Ensure the scripts support debug output; I favor `-d` as a flag for enabling debug output.
