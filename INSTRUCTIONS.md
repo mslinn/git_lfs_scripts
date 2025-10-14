@@ -4,9 +4,9 @@ My development server shows the work in progress of a subproject of my website a
 `http://localhost:4001/git/index.html`.
 The public version of that same page is viewable at `https://mslinn.com/git/index.html`.
 The source of these websites is on this machine at
-`/var/sitesUbuntu/www.mslinn.com/collections/_git`
+`/var/sitesUbuntu/www.mslinn.com_cursor/collections/_git`
 
-We will be modifying the local copy of the website in the branch called `gemini`.
+We will be modifying the local copy of the website in the branch called `cursor`.
 
 On the aforementioned web page, under the heading "Git Large File System":
 
@@ -16,8 +16,8 @@ On the aforementioned web page, under the heading "Git Large File System":
 - This subproject of my website is an unfinished work, which I would like your help with.
 
 The test software at `https://github.com/mslinn/git_lfs_scripts` is stored locally as
-`/mnt/f/work/git/git_lfs_scripts`.
-We will be modifying the local copy of the `git_lfs_scripts` in a branch called `gemini`.
+`/mnt/f/work/git/git_lfs_scripts_cursor`.
+We will be modifying the local copy of the `git_lfs_scripts` in a branch called `cursor`.
 
 - Currently, `git_lfs_scripts` is mostly written in Bash with some Ruby,
   but those languages seems like poor choices for the data collection and reporting
