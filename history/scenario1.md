@@ -29,8 +29,8 @@ This installs all commands to `/usr/local/bin/`:
 - `lfst-query` - Query and report on test data
 - `lfst-scenario` - Execute complete 7-step test scenarios
 
-The database is created automatically at first use.
-Default path: `/home/mslinn/lfs_eval/lfs-test.db`
+The database is created automatically at first use at
+`gojira:/home/mslinn/lfs_eval/lfs-test.db`
 
 
 ### On Clients (Bear and Camille)
@@ -194,7 +194,42 @@ Comparing checksums with step 3...
 ✓ Checksums match (6 files)
 ✓ Step 4 complete
 
-... (steps 5-7)
+--- Step 5 ---
+Creating new file in second clone...
+Adding new file to git...
+  ✓ Added in 45ms
+Committing new file...
+  ✓ Committed in 123ms
+Computing checksums after changes...
+Stored 7 checksums for step 5
+✓ Step 5 complete
+
+--- Step 6 ---
+Pulling changes from remote...
+  (Skipping pull - remote not yet configured)
+Computing checksums in first clone...
+Stored 6 checksums for step 6
+  Note: Checksum comparison with step 5 requires working pull
+✓ Step 6 complete
+
+--- Step 7 ---
+Untracking patterns from LFS...
+  ✓ Untracked *.pdf in 25ms
+  ✓ Untracked *.mov in 18ms
+  ✓ Untracked *.avi in 20ms
+  ✓ Untracked *.ogg in 19ms
+  ✓ Untracked *.m4v in 21ms
+  ✓ Untracked *.zip in 17ms
+Migrating files out of LFS...
+  ✓ Migrated files in 5432ms
+Adding .gitattributes changes...
+  ✓ Added in 12ms
+Committing LFS untrack...
+  ✓ Committed in 98ms
+Computing final checksums...
+Stored 6 checksums for step 7
+✓ Files successfully untracked from LFS
+✓ Step 7 complete
 
 ✓ Scenario 6 completed successfully
   Run ID: 1
