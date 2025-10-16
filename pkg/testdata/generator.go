@@ -126,7 +126,13 @@ func ParseRemotePath(path string) (*RemotePath, bool) {
 	if strings.Contains(path, ":") {
 		parts := strings.SplitN(path, ":", 2)
 		if len(parts) == 2 && !strings.HasPrefix(parts[0], "/") {
-			// This looks like host:/path, not /path/with:colon or C:/windows
+			// Check if this is a Windows drive letter (single letter before colon)
+			if len(parts[0]) == 1 && parts[0][0] >= 'A' && parts[0][0] <= 'Z' ||
+				len(parts[0]) == 1 && parts[0][0] >= 'a' && parts[0][0] <= 'z' {
+				// This is a Windows path like C:/path
+				return nil, false
+			}
+			// This looks like host:/path
 			return &RemotePath{
 				Host: parts[0],
 				Path: parts[1],
