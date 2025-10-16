@@ -10,17 +10,22 @@ import (
 
 // Config represents the LFS test configuration
 type Config struct {
-	Database   string `yaml:"database"`
-	RemoteHost string `yaml:"remote_host"`
-	AutoRemote bool   `yaml:"auto_remote"`
+	DatabasePath string `yaml:"database"`
+	RemoteHost   string `yaml:"remote_host"`
+	AutoRemote   bool   `yaml:"auto_remote"`
 }
 
 // DefaultConfig returns the default configuration
 func DefaultConfig() *Config {
+	homeDir, err := os.UserHomeDir()
+	dbPath := "/home/mslinn/lfs_eval/lfs-test.db"
+	if err == nil {
+		dbPath = filepath.Join(homeDir, "lfs_eval", "lfs-test.db")
+	}
 	return &Config{
-		Database:   "/home/mslinn/lfs_eval/lfs-test.db",
-		RemoteHost: "gojira",
-		AutoRemote: true,
+		DatabasePath: dbPath,
+		RemoteHost:   "gojira",
+		AutoRemote:   true,
 	}
 }
 
@@ -49,7 +54,7 @@ func Load() (*Config, error) {
 
 	// Override with environment variables
 	if db := os.Getenv("LFS_TEST_DB"); db != "" {
-		cfg.Database = db
+		cfg.DatabasePath = db
 	}
 	if host := os.Getenv("LFS_REMOTE_HOST"); host != "" {
 		cfg.RemoteHost = host
@@ -76,10 +81,16 @@ func loadFromFile(cfg *Config, path string) error {
 }
 
 // Save saves the configuration to a file
-func Save(cfg *Config, path string) error {
+func (cfg *Config) Save(path string) error {
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
 	if err := os.WriteFile(path, data, 0644); err != nil {
@@ -87,6 +98,20 @@ func Save(cfg *Config, path string) error {
 	}
 
 	return nil
+}
+
+// GetConfigPath returns the path to the config file
+func GetConfigPath() string {
+	configPath := os.Getenv("LFS_TEST_CONFIG")
+	if configPath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err == nil {
+			configPath = filepath.Join(homeDir, ".lfs-test-config")
+		} else {
+			configPath = ".lfs-test-config"
+		}
+	}
+	return configPath
 }
 
 // IsRemoteHost returns true if the current hostname is not the remote host
@@ -105,11 +130,11 @@ func (cfg *Config) IsRemoteHost() bool {
 
 // GetDatabasePath returns the database path, expanding ~/ if needed
 func (cfg *Config) GetDatabasePath() string {
-	if len(cfg.Database) > 0 && cfg.Database[0] == '~' {
+	if len(cfg.DatabasePath) > 0 && cfg.DatabasePath[0] == '~' {
 		homeDir, err := os.UserHomeDir()
 		if err == nil {
-			return filepath.Join(homeDir, cfg.Database[2:])
+			return filepath.Join(homeDir, cfg.DatabasePath[2:])
 		}
 	}
-	return cfg.Database
+	return cfg.DatabasePath
 }
