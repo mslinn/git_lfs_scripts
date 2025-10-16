@@ -112,7 +112,7 @@ If not present, the test data can be downloaded using the `git_lfs_test_data` sc
 
 ### Automated Execution (Recommended)
 
-The `lfst-scenario` command automates the entire 7-step test procedure:
+The `lfst-scenario` command automates the entire 7-step test procedure. All steps are fully implemented, including GitHub repository creation (using `gh` CLI), `.lfsconfig` file generation, evaluation README generation, and automatic cleanup on failure. Use the `-f` flag to force recreation of existing repositories.
 
 ```shell
 # List available scenarios
@@ -235,23 +235,6 @@ Stored 6 checksums for step 7
   Run ID: 1
   View results: lfst-run show 1
 ```
-
-**Note:** All 7 steps are now fully implemented with `create_lfs_eval_repo` functionality:
-
-- Steps 1-3: Fully functional (setup with GitHub repo creation, .lfsconfig, evaluation README, 2.4GB real files)
-- Step 4: Clone functionality (local cloning works, GitHub cloning ready)
-- Step 5: Changes on second client (creates test file, commits locally)
-- Step 6: Pull to first client (infrastructure ready, requires LFS server configuration)
-- Step 7: LFS untrack and migrate (full functionality implemented)
-
-**New Features from `create_lfs_eval_repo`:**
-
-- GitHub repository creation using `gh` CLI (scenario 7 and others)
-- `.lfsconfig` file generation with LFS server URL
-- Evaluation README.md generation with scenario details
-- Force flag (`-f`) to recreate existing repositories
-- Remote setup automation for GitHub scenarios
-
 
 ### What Each Step Does
 
