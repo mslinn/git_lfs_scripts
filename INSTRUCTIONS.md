@@ -48,6 +48,15 @@ When you read that file, pay special attention to the instructions between
 I would like you to begin by verifying and discussing with me how to complete a test plan just for the Git LFS Server.
 Ask me questions to clarify the requirements.
 Do not make any edits to documents until we reach agreement that the requirements are properly stated.
+If you can, please take a quick peek at `gojira` so you are aware of the mount points.
+
+```shell
+$ ping gojira
+PING gojira (192.168.1.183) 56(84) bytes of data.
+64 bytes from gojira (192.168.1.183): icmp_seq=1 ttl=64 time=3.38 ms
+^C
+```
+
 Once we have a version of the documents that we like,
 I will tell you to go to the next step.
 
