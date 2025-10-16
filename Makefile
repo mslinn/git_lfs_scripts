@@ -5,7 +5,7 @@ INSTALL_PATH=/usr/local/bin
 VERSION=$(shell cat VERSION)
 
 # All executables to build
-COMMANDS=lfst-checksum lfst-import lfst-run lfst-query
+COMMANDS=lfst-checksum lfst-import lfst-run lfst-query lfst-scenario
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'

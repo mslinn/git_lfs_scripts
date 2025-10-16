@@ -26,7 +26,13 @@
       "Bash(./test_remote.sh:*)",
       "Bash(make clean:*)",
       "Bash(go build:*)",
-      "Bash(./test_workflow.sh:*)"
+      "Bash(./test_workflow.sh:*)",
+      "Read(//mnt/f/work/**)",
+      "Read(//mnt/o/**)",
+      "Bash(killall find)",
+      "Bash(./bin/lfst-scenario:*)",
+      "WebFetch(domain:www.mslinn.com)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
