@@ -108,3 +108,5 @@ Summarize and publish the results and the source code.
   - local: `/mnt/f/work/git/git_tree`; GitHub: `https://github.com/mslinn/git_tree`
 
 - All programs need comprehensive unit tests.
+
+- Make a commit for every action you take with a message.
