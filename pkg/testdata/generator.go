@@ -69,13 +69,13 @@ func CopyFiles(destDir string, specs []FileSpec, debug bool) error {
 }
 
 // GetTestDataPath returns the path to the test data directory
-// Searches in multiple locations
+// Searches in multiple locations, prioritizing LFS_TEST_DATA environment variable
 func GetTestDataPath() (string, error) {
 	candidates := []string{
+		os.Getenv("LFS_TEST_DATA"),
 		"/mnt/f/work/git/git_lfs_test_data",
 		"/work/git/git_lfs_test_data",
 		"/home/mslinn/git_lfs_test_data",
-		os.Getenv("LFS_TEST_DATA"),
 	}
 
 	for _, path := range candidates {
