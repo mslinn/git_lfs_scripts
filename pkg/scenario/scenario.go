@@ -735,16 +735,15 @@ func (r *Runner) validatePrerequisites() error {
 		return fmt.Errorf("test data not found: %w\n\nPlease set LFS_TEST_DATA environment variable or place data in standard locations.\nSee: https://www.mslinn.com/git/5600-git-lfs-evaluation.html#git_lfs_test_data", err)
 	}
 
-	// Check if v1 directory exists
-	v1Path := filepath.Join(dataPath, "v1")
-	if _, err := os.Stat(v1Path); os.IsNotExist(err) {
-		return fmt.Errorf("test data v1 directory not found at: %s", v1Path)
-	}
-
-	// Check if v2 directory exists
-	v2Path := filepath.Join(dataPath, "v2")
-	if _, err := os.Stat(v2Path); os.IsNotExist(err) {
-		return fmt.Errorf("test data v2 directory not found at: %s", v2Path)
+	// Check if test data is remote and rsync is available
+	if _, isRemote := testdata.ParseRemotePath(dataPath); isRemote {
+		result := timing.Run("rsync", []string{"--version"}, nil)
+		if result.Error != nil || result.ExitCode != 0 {
+			return fmt.Errorf("rsync is not installed or not in PATH\n\nRsync is required for remote test data.\nInstall with: apt-get install rsync")
+		}
+		if r.Debug {
+			fmt.Println("  ✓ rsync is available (for remote test data)")
+		}
 	}
 
 	if r.Debug {
