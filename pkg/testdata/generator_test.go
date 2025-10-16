@@ -350,11 +350,13 @@ func TestRealTestFiles_Structure(t *testing.T) {
 		t.Fatalf("Failed to create v1 dir: %v", err)
 	}
 
-	// Create dummy test files
+	// Create dummy test files with identifiable content
 	testFiles := []string{"pdf1.pdf", "video1.m4v", "video2.mov", "video3.avi", "video4.ogg", "zip1.zip", "zip2.zip"}
 	for _, name := range testFiles {
 		path := filepath.Join(v1Dir, name)
-		if err := os.WriteFile(path, []byte("dummy"), 0644); err != nil {
+		// Write identifiable content so we can verify source
+		content := []byte("v1_content_" + name)
+		if err := os.WriteFile(path, content, 0644); err != nil {
 			t.Fatalf("Failed to create test file %s: %v", name, err)
 		}
 	}
@@ -381,6 +383,73 @@ func TestRealTestFiles_Structure(t *testing.T) {
 		}
 		if spec.SourcePath == "" {
 			t.Error("FileSpec has empty SourcePath")
+		}
+	}
+}
+
+func TestRealTestFiles_SourceFromV1(t *testing.T) {
+	// Save original environment
+	orig := os.Getenv("LFS_TEST_DATA")
+	defer os.Setenv("LFS_TEST_DATA", orig)
+
+	// Create a temporary test data structure
+	tempDir, err := os.MkdirTemp("", "testdata_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create v1 directory with distinct content
+	v1Dir := filepath.Join(tempDir, "v1")
+	if err := os.MkdirAll(v1Dir, 0755); err != nil {
+		t.Fatalf("Failed to create v1 dir: %v", err)
+	}
+
+	expectedFiles := map[string]string{
+		"pdf1.pdf":    "v1_pdf_content",
+		"video1.m4v":  "v1_video1_content",
+		"video2.mov":  "v1_video2_content",
+		"video3.avi":  "v1_video3_content",
+		"video4.ogg":  "v1_video4_content",
+		"zip1.zip":    "v1_zip1_content",
+		"zip2.zip":    "v1_zip2_content",
+	}
+
+	// Create test files with specific content
+	for name, content := range expectedFiles {
+		path := filepath.Join(v1Dir, name)
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatalf("Failed to create test file %s: %v", name, err)
+		}
+	}
+
+	// Set environment to use temp dir
+	os.Setenv("LFS_TEST_DATA", tempDir)
+
+	// Get test files
+	specs, err := RealTestFiles()
+	if err != nil {
+		t.Fatalf("RealTestFiles() failed: %v", err)
+	}
+
+	// Verify each file's source path points to v1
+	for _, spec := range specs {
+		// Check that source path contains /v1/
+		if !contains(spec.SourcePath, "/v1/") && !contains(spec.SourcePath, "\\v1\\") {
+			t.Errorf("File %s source path %s doesn't contain /v1/", spec.Name, spec.SourcePath)
+		}
+
+		// Verify the file actually exists and has correct content
+		content, err := os.ReadFile(spec.SourcePath)
+		if err != nil {
+			t.Errorf("Failed to read source file %s: %v", spec.SourcePath, err)
+			continue
+		}
+
+		expectedContent := expectedFiles[spec.Name]
+		if string(content) != expectedContent {
+			t.Errorf("File %s has content %q, want %q (verifying it came from v1)",
+				spec.Name, string(content), expectedContent)
 		}
 	}
 }
@@ -436,4 +505,105 @@ func TestRealTestFilesV2_Structure(t *testing.T) {
 			t.Error("FileSpec has empty SourcePath")
 		}
 	}
+}
+
+func TestRealTestFilesV2_SourceFromV2(t *testing.T) {
+	// Save original environment
+	orig := os.Getenv("LFS_TEST_DATA")
+	defer os.Setenv("LFS_TEST_DATA", orig)
+
+	// Create a temporary test data structure
+	tempDir, err := os.MkdirTemp("", "testdata_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create both v1 and v2 directories to ensure v2 files come from v2
+	v1Dir := filepath.Join(tempDir, "v1")
+	v2Dir := filepath.Join(tempDir, "v2")
+	if err := os.MkdirAll(v1Dir, 0755); err != nil {
+		t.Fatalf("Failed to create v1 dir: %v", err)
+	}
+	if err := os.MkdirAll(v2Dir, 0755); err != nil {
+		t.Fatalf("Failed to create v2 dir: %v", err)
+	}
+
+	// Create v1 versions with v1-specific content
+	v1Files := map[string]string{
+		"pdf1.pdf":    "v1_pdf_content",
+		"video2.mov":  "v1_video2_content",
+		"video3.avi":  "v1_video3_content",
+		"zip1.zip":    "v1_zip1_content",
+	}
+	for name, content := range v1Files {
+		path := filepath.Join(v1Dir, name)
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatalf("Failed to create v1 test file %s: %v", name, err)
+		}
+	}
+
+	// Create v2 versions with v2-specific content (updated versions)
+	v2Files := map[string]string{
+		"pdf1.pdf":    "v2_pdf_content_updated",
+		"video2.mov":  "v2_video2_content_updated",
+		"video3.avi":  "v2_video3_content_updated",
+		"zip1.zip":    "v2_zip1_content_updated",
+	}
+	for name, content := range v2Files {
+		path := filepath.Join(v2Dir, name)
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatalf("Failed to create v2 test file %s: %v", name, err)
+		}
+	}
+
+	// Set environment to use temp dir
+	os.Setenv("LFS_TEST_DATA", tempDir)
+
+	// Get v2 test files
+	specs, err := RealTestFilesV2()
+	if err != nil {
+		t.Fatalf("RealTestFilesV2() failed: %v", err)
+	}
+
+	// Verify each file's source path points to v2
+	for _, spec := range specs {
+		// Check that source path contains /v2/
+		if !contains(spec.SourcePath, "/v2/") && !contains(spec.SourcePath, "\\v2\\") {
+			t.Errorf("File %s source path %s doesn't contain /v2/", spec.Name, spec.SourcePath)
+		}
+
+		// Verify the file actually exists and has v2 content (not v1)
+		content, err := os.ReadFile(spec.SourcePath)
+		if err != nil {
+			t.Errorf("Failed to read source file %s: %v", spec.SourcePath, err)
+			continue
+		}
+
+		expectedContent := v2Files[spec.Name]
+		if string(content) != expectedContent {
+			t.Errorf("File %s has content %q, want %q (verifying it came from v2, not v1)",
+				spec.Name, string(content), expectedContent)
+		}
+
+		// Double-check it's NOT the v1 content
+		v1Content := v1Files[spec.Name]
+		if string(content) == v1Content {
+			t.Errorf("File %s has v1 content %q, but should have v2 content (source verification failed)",
+				spec.Name, v1Content)
+		}
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && containsSubstring(s, substr)
+}
+
+func containsSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
