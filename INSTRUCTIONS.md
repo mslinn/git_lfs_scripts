@@ -109,4 +109,4 @@ Summarize and publish the results and the source code.
 
 - All programs need comprehensive unit tests.
 
-- Make a commit for every action you take with a message.
+- Make a commit for every action you take with a  message.
