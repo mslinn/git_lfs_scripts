@@ -182,7 +182,7 @@ func printHelp() {
 	fmt.Printf("  lfst-scenario --work-dir /mnt/o/lfs_test 6\n\n")
 
 	fmt.Printf("NOTES:\n")
-	fmt.Printf("  - Requires ~2.4GB of test data in /mnt/f/work/git/git_lfs_test_data\n")
+	fmt.Printf("  - Requires ~2.4GB of test data (set LFS_TEST_DATA environment variable)\n")
 	fmt.Printf("  - Work directory should have at least 5GB free space\n")
 	fmt.Printf("  - For remote scenarios, requires passwordless SSH to gojira\n")
 	fmt.Printf("  - Each run creates a test_run record in the database\n")
