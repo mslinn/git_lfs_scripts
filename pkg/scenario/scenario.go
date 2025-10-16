@@ -102,6 +102,12 @@ func (r *Runner) Execute() error {
 			run.Status = "failed"
 			run.Notes += fmt.Sprintf(" | Failed at step %d: %v", stepNum, err)
 			r.DB.UpdateTestRun(run)
+
+			// Attempt cleanup
+			if cleanupErr := r.cleanup(); cleanupErr != nil && r.Debug {
+				fmt.Printf("Warning: cleanup failed: %v\n", cleanupErr)
+			}
+
 			return fmt.Errorf("step %d failed: %w", stepNum, err)
 		}
 
@@ -724,6 +730,39 @@ func (r *Runner) validateTestData() error {
 
 	if r.Debug {
 		fmt.Printf("  ✓ Test data found at: %s\n", dataPath)
+	}
+
+	return nil
+}
+
+// cleanup removes working directories after failure
+func (r *Runner) cleanup() error {
+	if r.Debug {
+		fmt.Println("\nCleaning up working directories...")
+	}
+
+	var errs []error
+
+	// Remove first repository directory
+	if _, err := os.Stat(r.RepoDir); err == nil {
+		if err := os.RemoveAll(r.RepoDir); err != nil {
+			errs = append(errs, fmt.Errorf("failed to remove %s: %w", r.RepoDir, err))
+		} else if r.Debug {
+			fmt.Printf("  ✓ Removed %s\n", r.RepoDir)
+		}
+	}
+
+	// Remove second repository directory
+	if _, err := os.Stat(r.Repo2Dir); err == nil {
+		if err := os.RemoveAll(r.Repo2Dir); err != nil {
+			errs = append(errs, fmt.Errorf("failed to remove %s: %w", r.Repo2Dir, err))
+		} else if r.Debug {
+			fmt.Printf("  ✓ Removed %s\n", r.Repo2Dir)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("cleanup errors: %v", errs)
 	}
 
 	return nil
