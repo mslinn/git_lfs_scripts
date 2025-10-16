@@ -9,6 +9,7 @@ import (
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
 	"github.com/mslinn/git_lfs_scripts/pkg/git"
 	"github.com/mslinn/git_lfs_scripts/pkg/testdata"
+	"github.com/mslinn/git_lfs_scripts/pkg/timing"
 )
 
 // Scenario defines a Git LFS test scenario
@@ -56,8 +57,8 @@ func (r *Runner) Execute() error {
 		fmt.Printf("Work directory: %s\n\n", r.WorkDir)
 	}
 
-	// Validate test data availability before starting
-	if err := r.validateTestData(); err != nil {
+	// Validate prerequisites before starting
+	if err := r.validatePrerequisites(); err != nil {
 		return err
 	}
 
@@ -704,10 +705,28 @@ Generated automatically by lfst-scenario command.
 	return nil
 }
 
-// validateTestData checks if test data is available before starting scenario
-func (r *Runner) validateTestData() error {
+// validatePrerequisites checks if all prerequisites are met before starting scenario
+func (r *Runner) validatePrerequisites() error {
 	if r.Debug {
-		fmt.Println("Validating test data availability...")
+		fmt.Println("Validating prerequisites...")
+	}
+
+	// Check if git is available
+	result := timing.Run("git", []string{"--version"}, nil)
+	if result.Error != nil || result.ExitCode != 0 {
+		return fmt.Errorf("git is not installed or not in PATH")
+	}
+	if r.Debug {
+		fmt.Println("  ✓ git is available")
+	}
+
+	// Check if git-lfs is available
+	result = timing.Run("git", []string{"lfs", "version"}, nil)
+	if result.Error != nil || result.ExitCode != 0 {
+		return fmt.Errorf("git-lfs is not installed or not in PATH\n\nInstall with: apt-get install git-lfs")
+	}
+	if r.Debug {
+		fmt.Println("  ✓ git-lfs is available")
 	}
 
 	// Try to get test data path
