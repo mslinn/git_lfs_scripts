@@ -227,7 +227,7 @@ Comparing checksums with step 3...
    - Add GitHub remote as 'origin'
    - Install git-lfs hooks
    - Create `.lfsconfig` with LFS server URL (if applicable)
-   - Configure LFS tracking patterns (*.pdf, *.mov, *.avi, *.ogg, *.m4v, *.zip)
+   - Configure LFS tracking patterns, e.g. \*.pdf, \*.mov, \*.avi, \*.ogg, \*.m4v, \*.zip
    - Generate evaluation README.md with scenario details
    - Copy 1.3GB test files from v1/
    - Compute and store checksums
