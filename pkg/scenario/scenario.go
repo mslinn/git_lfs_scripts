@@ -56,6 +56,11 @@ func (r *Runner) Execute() error {
 		fmt.Printf("Work directory: %s\n\n", r.WorkDir)
 	}
 
+	// Validate test data availability before starting
+	if err := r.validateTestData(); err != nil {
+		return err
+	}
+
 	// Create test run
 	run := &database.TestRun{
 		ScenarioID: r.Scenario.ID,
@@ -688,6 +693,37 @@ Generated automatically by lfst-scenario command.
 
 	if r.Debug {
 		fmt.Printf("  ✓ Created README.md\n")
+	}
+
+	return nil
+}
+
+// validateTestData checks if test data is available before starting scenario
+func (r *Runner) validateTestData() error {
+	if r.Debug {
+		fmt.Println("Validating test data availability...")
+	}
+
+	// Try to get test data path
+	dataPath, err := testdata.GetTestDataPath()
+	if err != nil {
+		return fmt.Errorf("test data not found: %w\n\nPlease set LFS_TEST_DATA environment variable or place data in standard locations.\nSee: https://www.mslinn.com/git/5600-git-lfs-evaluation.html#git_lfs_test_data", err)
+	}
+
+	// Check if v1 directory exists
+	v1Path := filepath.Join(dataPath, "v1")
+	if _, err := os.Stat(v1Path); os.IsNotExist(err) {
+		return fmt.Errorf("test data v1 directory not found at: %s", v1Path)
+	}
+
+	// Check if v2 directory exists
+	v2Path := filepath.Join(dataPath, "v2")
+	if _, err := os.Stat(v2Path); os.IsNotExist(err) {
+		return fmt.Errorf("test data v2 directory not found at: %s", v2Path)
+	}
+
+	if r.Debug {
+		fmt.Printf("  ✓ Test data found at: %s\n", dataPath)
 	}
 
 	return nil
