@@ -22,6 +22,7 @@ $ make install
 ```
 
 This installs all commands to `/usr/local/bin/`:
+
 - `lfst-checksum` - Compute and store checksums
 - `lfst-import` - Import checksum JSON data
 - `lfst-run` - Manage test run lifecycle
@@ -57,13 +58,17 @@ EOF
 The test commands use several environment variables for configuration:
 
 **Required for testing:**
+
 - `LFS_TEST_DATA` - Location of test data directory (e.g., `/mnt/f/work/git/git_lfs_test_data`)
 
+
 **Optional (override config file):**
+
 - `LFS_TEST_DB` - Database path (default: `/home/mslinn/lfs_eval/lfs-test.db`)
 - `LFS_TEST_CONFIG` - Path to config file (default: `~/.lfs-test-config`)
 - `LFS_REMOTE_HOST` - Remote host for SSH operations (default: `gojira`)
 - `LFS_AUTO_REMOTE` - Enable auto-remote detection: `true`/`1` or `false`/`0` (default: `true`)
+
 
 **Setting environment variables:**
 
@@ -197,6 +202,7 @@ Comparing checksums with step 3...
 ```
 
 **Note:** All 7 steps are now fully implemented with `create_lfs_eval_repo` functionality:
+
 - Steps 1-3: Fully functional (setup with GitHub repo creation, .lfsconfig, evaluation README, 2.4GB real files)
 - Step 4: Clone functionality (local cloning works, GitHub cloning ready)
 - Step 5: Changes on second client (creates test file, commits locally)
@@ -204,6 +210,7 @@ Comparing checksums with step 3...
 - Step 7: LFS untrack and migrate (full functionality implemented)
 
 **New Features from `create_lfs_eval_repo`:**
+
 - GitHub repository creation using `gh` CLI (scenario 7 and others)
 - `.lfsconfig` file generation with LFS server URL
 - Evaluation README.md generation with scenario details
