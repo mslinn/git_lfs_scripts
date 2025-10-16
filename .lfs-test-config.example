@@ -1,0 +1,12 @@
+# LFS Test Configuration
+# Copy this file to ~/.lfs-test-config and customize as needed
+
+# Path to the SQLite database (on gojira)
+database: /home/mslinn/lfs_eval/lfs-test.db
+
+# Remote host where the database resides
+remote_host: gojira
+
+# Auto-detect remote mode based on hostname
+# If true, commands run on non-gojira machines will automatically use SSH
+auto_remote: true

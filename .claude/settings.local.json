@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:localhost)",
+      "Read(//var/sitesUbuntu/www.mslinn.com/_includes/**)",
+      "Bash(ssh gojira \"mount | grep -E ''(nfs|cifs|samba)'' || echo ''Showing all mounts:'' && mount\")",
+      "WebFetch(domain:mslinn.com)",
+      "Read(//var/sitesUbuntu/www.mslinn.com/collections/_git/**)",
+      "Bash(ssh:*)",
+      "Read(//opt/**)",
+      "Bash(test:*)",
+      "Bash(git -C /var/sitesUbuntu/www.mslinn.com status --short)",
+      "Bash(git -C /var/sitesUbuntu/www.mslinn.com branch:*)",
+      "Bash(go version:*)",
+      "Read(//mnt/f/work/dl/**)",
+      "Read(//mnt/f/work/git/git_tree/**)",
+      "Bash(go mod init:*)",
+      "Bash(go get:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(make build-checksum:*)",
+      "Bash(./bin/lfs-checksum:*)",
+      "Bash(chmod:*)",
+      "Bash(./test_stage1.sh:*)",
+      "Bash(make build:*)",
+      "Bash(./bin/lfs-import:*)",
+      "Bash(./test_remote.sh:*)",
+      "Bash(make clean:*)",
+      "Bash(go build:*)",
+      "Bash(./test_workflow.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "run_id": 1,
+  "step_number": 2,
+  "checksums": [
+    {
+      "Path": "test1.txt",
+      "CRC32": 123456,
+      "SizeBytes": 100
+    },
+    {
+      "Path": "test2.txt",
+      "CRC32": 789012,
+      "SizeBytes": 200
+    }
+  ],
+  "computed_at": "2025-01-01T12:00:00Z"
+}
