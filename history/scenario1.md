@@ -52,6 +52,34 @@ EOF
 ```
 
 
+### Environment Variables
+
+The test commands use several environment variables for configuration:
+
+**Required for testing:**
+- `LFS_TEST_DATA` - Location of test data directory (e.g., `/mnt/f/work/git/git_lfs_test_data`)
+
+**Optional (override config file):**
+- `LFS_TEST_DB` - Database path (default: `/home/mslinn/lfs_eval/lfs-test.db`)
+- `LFS_TEST_CONFIG` - Path to config file (default: `~/.lfs-test-config`)
+- `LFS_REMOTE_HOST` - Remote host for SSH operations (default: `gojira`)
+- `LFS_AUTO_REMOTE` - Enable auto-remote detection: `true`/`1` or `false`/`0` (default: `true`)
+
+**Setting environment variables:**
+
+```shell
+# Recommended: Add to ~/.bashrc or ~/.zshrc
+export LFS_TEST_DATA=/mnt/f/work/git/git_lfs_test_data
+
+# Optional overrides
+export LFS_TEST_DB=/path/to/custom/database.db
+export LFS_REMOTE_HOST=myserver
+```
+
+For more information on environment variables and directory organization, see:
+https://www.mslinn.com/git/5600-git-lfs-evaluation.html
+
+
 ### Test Data Requirements
 
 The test scenarios require **2.4GB of real large files** (103M-398M each).
@@ -60,7 +88,7 @@ These must be available on the machine running `lfst-scenario`.
 Check if test data exists:
 
 ```shell
-$ ls -lh /mnt/f/work/git/git_lfs_test_data/v1/
+$ ls -lh $LFS_TEST_DATA/v1/
 total 1.3G
 -rw-r--r-- 1 mslinn mslinn 103M Jan 23  2025 pdf1.pdf
 -rw-r--r-- 1 mslinn mslinn 116M Jan 23  2025 video1.m4v
@@ -72,7 +100,7 @@ total 1.3G
 ```
 
 If not present, the test data can be downloaded using the `git_lfs_test_data` script
-(documented at http://localhost:4001/git/5600-git-lfs-evaluation.html#git_lfs_test_data).
+(documented at https://www.mslinn.com/git/5600-git-lfs-evaluation.html#git_lfs_test_data).
 
 
 ## Running a Test Scenario
@@ -356,12 +384,18 @@ $ gh auth login
 Error: test data directory not found (searched: [/mnt/f/work/git/git_lfs_test_data /work/git/git_lfs_test_data ...])
 ```
 
-**Solution:** Set the `LFS_TEST_DATA` environment variable:
+**Solution:** Set the `LFS_TEST_DATA` environment variable (add to `~/.bashrc` or `~/.zshrc`):
 
 ```shell
-export LFS_TEST_DATA=/path/to/git_lfs_test_data
+export LFS_TEST_DATA=/mnt/f/work/git/git_lfs_test_data  # or your actual path
 lfst-scenario 6
 ```
+
+The commands search for test data in these locations:
+1. `$LFS_TEST_DATA` environment variable
+2. `/mnt/f/work/git/git_lfs_test_data` (WSL/Windows)
+3. `/work/git/git_lfs_test_data` (Linux)
+4. `/home/mslinn/git_lfs_test_data` (fallback)
 
 ### Remote mode not working
 
@@ -380,11 +414,21 @@ ssh gojira "which lfst-import"
 
 ### Database location
 
-Commands search for the database in this order:
-1. `--db` flag
-2. `LFS_TEST_DB` environment variable
-3. `~/.lfs-test-config` file
-4. Default: `/home/mslinn/lfs_eval/lfs-test.db`
+Commands search for the database in this order (highest priority first):
+1. `--db` command-line flag
+2. `$LFS_TEST_DB` environment variable
+3. `database` setting in `~/.lfs-test-config` file
+4. `$LFS_TEST_CONFIG` environment variable (alternate config file path)
+5. Default: `/home/mslinn/lfs_eval/lfs-test.db`
+
+**Example:**
+```shell
+# Use environment variable
+export LFS_TEST_DB=/path/to/my-test.db
+
+# Or use command-line flag
+lfst-scenario --db /path/to/my-test.db 6
+```
 
 
 ## Next Steps
