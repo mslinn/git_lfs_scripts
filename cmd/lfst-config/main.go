@@ -21,8 +21,8 @@ func main() {
 	)
 
 	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
-	pflag.StringVar(&configPath, "config", "", "Path to config file (default: ~/.lfs-test-config)")
+	pflag.BoolVarP(&showHelp,    "help",    "h", false, "Show this help message")
+	pflag.StringVar(&configPath, "config",  "",         "Path to config file (default: ~/.lfs-test-config)")
 
 	pflag.Parse()
 
@@ -134,11 +134,12 @@ func handleSet(args []string) {
 	case "remote_host":
 		cfg.RemoteHost = value
 	case "auto_remote":
-		if value == "true" || value == "1" {
+		switch value {
+    case "true", "1":
 			cfg.AutoRemote = true
-		} else if value == "false" || value == "0" {
+		case "false", "0":
 			cfg.AutoRemote = false
-		} else {
+		default:
 			fmt.Fprintf(os.Stderr, "Error: invalid value for auto_remote (use true/false or 1/0)\n")
 			os.Exit(1)
 		}

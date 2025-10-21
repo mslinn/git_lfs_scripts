@@ -26,13 +26,13 @@ func main() {
 		listOnly    bool
 	)
 
-	pflag.BoolVarP(&showVersion, "version",  "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp,    "help",     "h", false, "Show this help message")
-	pflag.BoolVarP(&verbose,     "verbose",  "v", false, "Enable verbose output")
-	pflag.BoolVarP(&force,       "force",    "f", false, "Force recreation of existing repositories")
-	pflag.StringVar(&dbPath,     "db",       "", "Path to SQLite database (default from config)")
+	pflag.BoolVarP(&showVersion, "version",  "V", false,  "Show version and exit")
+	pflag.BoolVarP(&showHelp,    "help",     "h", false,  "Show this help message")
+	pflag.BoolVarP(&verbose,     "verbose",  "v", false,  "Enable verbose output")
+	pflag.BoolVarP(&force,       "force",    "f", false,  "Force recreation of existing repositories")
+	pflag.StringVar(&dbPath,     "db",       "",          "Path to SQLite database (default from config)")
 	pflag.StringVar(&workDir,    "work-dir", "/tmp/lfst", "Working directory for test execution")
-	pflag.BoolVarP(&listOnly,    "list",     "L", false, "List available scenarios and exit")
+	pflag.BoolVarP(&listOnly,    "list",     "L", false,  "List available scenarios and exit")
 
 	pflag.Parse()
 

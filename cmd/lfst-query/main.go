@@ -24,10 +24,10 @@ func main() {
 	)
 
 	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
-	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
-	pflag.BoolVarP(&debug, "verbose", "v", false, "Enable verbose output (alias for --debug)")
-	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
+	pflag.BoolVarP(&showHelp,    "help",    "h", false, "Show this help message")
+	pflag.BoolVarP(&debug,       "debug",   "d", false, "Enable debug output")
+	pflag.BoolVarP(&debug,       "verbose", "v", false, "Enable verbose output (alias for --debug)")
+	pflag.StringVar(&dbPath,     "db",      "",         "Path to SQLite database (default from config)")
 
 	// Stop parsing at first non-flag argument (the subcommand)
 	pflag.CommandLine.SetInterspersed(false)
@@ -87,9 +87,9 @@ func main() {
 
 func handleChecksums(db *database.DB, args []string, debug bool) {
 	fs := pflag.NewFlagSet("checksums", pflag.ExitOnError)
-	runID := fs.Int64("run-id", 0, "Test run ID (required)")
-	stepNumber := fs.Int("step", 0, "Step number (required)")
-	limit := fs.Int("limit", 50, "Maximum number of checksums to display")
+	runID      := fs.Int64("run-id", 0,  "Test run ID (required)")
+	stepNumber := fs.Int("step",     0,  "Step number (required)")
+	limit      := fs.Int("limit",    50, "Maximum number of checksums to display")
 
 	fs.Parse(args)
 
@@ -140,9 +140,9 @@ func handleChecksums(db *database.DB, args []string, debug bool) {
 
 func handleCompare(db *database.DB, args []string, debug bool) {
 	fs := pflag.NewFlagSet("compare", pflag.ExitOnError)
-	runID := fs.Int64("run-id", 0, "Test run ID (required)")
-	fromStep := fs.Int("from", 0, "Source step number (required)")
-	toStep := fs.Int("to", 0, "Target step number (required)")
+	runID    := fs.Int64("run-id", 0, "Test run ID (required)")
+	fromStep := fs.Int("from",     0, "Source step number (required)")
+	toStep   := fs.Int("to",       0, "Target step number (required)")
 
 	fs.Parse(args)
 

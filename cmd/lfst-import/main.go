@@ -25,11 +25,11 @@ func main() {
 	)
 
 	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
-	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
-	pflag.BoolVarP(&debug, "verbose", "v", false, "Enable verbose output (alias for --debug)")
-	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
-	pflag.BoolVar(&stdinMode, "stdin", false, "Read JSON from stdin instead of file")
+	pflag.BoolVarP(&showHelp,    "help",    "h", false, "Show this help message")
+	pflag.BoolVarP(&debug,       "debug",   "d", false, "Enable debug output")
+	pflag.BoolVarP(&debug,       "verbose", "v", false, "Enable verbose output (alias for --debug)")
+	pflag.StringVar(&dbPath,     "db",      "",         "Path to SQLite database (default from config)")
+	pflag.BoolVar(&stdinMode,    "stdin",        false, "Read JSON from stdin instead of file")
 
 	pflag.Parse()
 
