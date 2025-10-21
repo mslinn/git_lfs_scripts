@@ -51,13 +51,19 @@ chmod +x /opt/lfs-test-server/start-lfs-server.sh
 To start the server manually on gojira:
 
 ```bash
+# On gojira directly
 /opt/lfs-test-server/start-lfs-server.sh
+
+# Or from a remote client
+ssh gojira "/opt/lfs-test-server/start-lfs-server.sh"
 ```
 
 This will:
 - Kill any existing lfs-test-server instance
 - Start a new instance with admin interface and verbose logging
 - Display server status information
+
+**Important:** The server runs in the background using `nohup` and continues running even after you log out. You don't need to keep your SSH session open.
 
 #### Automatic Start on Boot
 
@@ -78,19 +84,26 @@ The 60-second delay ensures the network is fully initialized before starting the
 If you need to restart the server (e.g., after configuration changes):
 
 ```bash
-# Simply run the startup script again - it kills existing instances first
+# From gojira directly
 /opt/lfs-test-server/start-lfs-server.sh
-```
 
-Or manually:
-
-```bash
-# Stop the server
-ssh gojira "pkill lfs-test-server"
-
-# Start it again
+# Or from a remote client
 ssh gojira "/opt/lfs-test-server/start-lfs-server.sh"
 ```
+
+The startup script automatically kills any existing instance before starting a new one, so a single command performs both stop and start.
+
+Alternatively, you can stop and start manually:
+
+```bash
+# Stop the server (from any machine)
+ssh gojira "pkill lfs-test-server"
+
+# Start it again (from any machine)
+ssh gojira "/opt/lfs-test-server/start-lfs-server.sh"
+```
+
+**Note:** After running these commands, the server continues running in the background even if you close your SSH session or log out.
 
 ### 3. Create Test User
 
