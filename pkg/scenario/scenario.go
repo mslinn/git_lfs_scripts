@@ -202,6 +202,17 @@ func (r *Runner) Step1_Setup() error {
 		WorkDir:    r.WorkDir,
 	}
 
+	// Remove existing repository directories to ensure clean slate
+	if r.Debug {
+		fmt.Println("Cleaning up any existing repository directories...")
+	}
+	if err := os.RemoveAll(r.RepoDir); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove existing repo directory: %w", err)
+	}
+	if err := os.RemoveAll(r.Repo2Dir); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove existing repo2 directory: %w", err)
+	}
+
 	// Initialize repository
 	if r.Debug {
 		fmt.Println("Initializing repository...")
