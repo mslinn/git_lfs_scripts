@@ -375,6 +375,45 @@ func (ctx *Context) AddRemote(repoDir, remoteName, url string) error {
 	return nil
 }
 
+// CreateRemoteBareRepo creates a bare git repository on a remote host via SSH
+func (ctx *Context) CreateRemoteBareRepo(hostname, repoPath string, force bool) error {
+	if ctx.Debug {
+		fmt.Printf("[Step %d] Creating bare repository on %s: %s\n", ctx.StepNumber, hostname, repoPath)
+	}
+
+	// Remove existing repository if force flag is set
+	if force {
+		removeResult := timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, fmt.Sprintf("rm -rf %s", repoPath)}, nil)
+		if removeResult.ExitCode == 0 && ctx.Debug {
+			fmt.Printf("  ✓ Removed existing repository\n")
+		}
+	}
+
+	// Create parent directory and initialize bare repository
+	cmd := fmt.Sprintf("mkdir -p $(dirname %s) && git init --bare %s", repoPath, repoPath)
+	result := timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, cmd}, nil)
+
+	if err := ctx.recordOperation("create-bare-repo", fmt.Sprintf("create bare repo on %s", hostname), result); err != nil {
+		if ctx.Debug {
+			fmt.Printf("  Warning: failed to record operation: %v\n", err)
+		}
+	}
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to create bare repository: %w", result.Error)
+	}
+
+	if result.ExitCode != 0 {
+		return fmt.Errorf("failed to create bare repository (exit %d): %s", result.ExitCode, result.Stderr)
+	}
+
+	if ctx.Debug {
+		fmt.Printf("  ✓ Created bare repository in %dms\n", result.DurationMs)
+	}
+
+	return nil
+}
+
 // LFSInstall installs git-lfs hooks in a repository
 func (ctx *Context) LFSInstall(repoDir string) error {
 	if ctx.Debug {

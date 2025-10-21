@@ -66,6 +66,7 @@ type Runner struct {
 	RepoDir    string // Repository directory (WorkDir/repo)
 	Repo2Dir   string // Second clone directory (WorkDir/repo2)
 	GitHubURL  string // GitHub clone URL (set during execution if created)
+	BareRepoURL string // Bare repository URL (set during execution if created)
 	ReportPath string // Path to save markdown report (optional)
 }
 
@@ -214,7 +215,7 @@ func (r *Runner) Step1_Setup() error {
 		return err
 	}
 
-	// Create GitHub repository if needed (scenarios 3-9 with github git server)
+	// Create GitHub repository if needed (scenarios with github git server)
 	if r.Scenario.GitServer == "github" && r.Scenario.RepoName != "" {
 		if r.Debug {
 			fmt.Println("Creating GitHub repository...")
@@ -227,6 +228,35 @@ func (r *Runner) Step1_Setup() error {
 
 		// Add the remote
 		if err := ctx.AddRemote(r.RepoDir, "origin", cloneURL); err != nil {
+			return fmt.Errorf("failed to add remote: %w", err)
+		}
+	}
+
+	// Create bare repository if needed (scenarios with bare git server)
+	if r.Scenario.GitServer == "bare" && r.Scenario.ServerURL != "" {
+		// Parse the server URL to get the hostname
+		parsedURL, err := url.Parse(r.Scenario.ServerURL)
+		if err != nil {
+			return fmt.Errorf("failed to parse server URL: %w", err)
+		}
+		hostname := parsedURL.Hostname()
+
+		// Create a unique path for the bare repository on the remote host
+		bareRepoPath := fmt.Sprintf("/opt/lfs-test-repos/test-repo-%d.git", r.Scenario.ID)
+
+		if r.Debug {
+			fmt.Printf("Creating bare repository on %s...\n", hostname)
+		}
+		if err := ctx.CreateRemoteBareRepo(hostname, bareRepoPath, r.Force); err != nil {
+			return fmt.Errorf("failed to create bare repository: %w", err)
+		}
+
+		// Construct the SSH URL for the bare repository
+		bareRepoURL := fmt.Sprintf("%s:%s", hostname, bareRepoPath)
+		r.BareRepoURL = bareRepoURL
+
+		// Add the bare repository as a remote
+		if err := ctx.AddRemote(r.RepoDir, "origin", bareRepoURL); err != nil {
 			return fmt.Errorf("failed to add remote: %w", err)
 		}
 	}
@@ -328,14 +358,20 @@ func (r *Runner) Step2_InitialPush() error {
 	}
 
 	// Push (if remote is configured)
-	if r.Scenario.ServerURL != "" {
+	if r.GitHubURL != "" || r.BareRepoURL != "" {
 		if r.Debug {
 			fmt.Println("Pushing to remote...")
 		}
-		// TODO: Set up remote first
-		// if err := ctx.Push(r.RepoDir, "origin", "main"); err != nil {
-		// 	return err
-		// }
+		// Determine the default branch name (try both master and main)
+		branchResult := timing.Run("git", []string{"-C", r.RepoDir, "branch", "--show-current"}, nil)
+		branch := "master"
+		if branchResult.ExitCode == 0 && branchResult.Stdout != "" {
+			branch = strings.TrimSpace(branchResult.Stdout)
+		}
+
+		if err := ctx.Push(r.RepoDir, "origin", branch); err != nil {
+			return err
+		}
 	}
 
 	// Compute checksums again to verify
@@ -414,14 +450,20 @@ func (r *Runner) Step3_Modifications() error {
 	}
 
 	// Push (if remote is configured)
-	if r.Scenario.ServerURL != "" {
+	if r.GitHubURL != "" || r.BareRepoURL != "" {
 		if r.Debug {
 			fmt.Println("Pushing modifications to remote...")
 		}
-		// TODO: Set up remote first
-		// if err := ctx.Push(r.RepoDir, "origin", "main"); err != nil {
-		// 	return err
-		// }
+		// Determine the default branch name
+		branchResult := timing.Run("git", []string{"-C", r.RepoDir, "branch", "--show-current"}, nil)
+		branch := "master"
+		if branchResult.ExitCode == 0 && branchResult.Stdout != "" {
+			branch = strings.TrimSpace(branchResult.Stdout)
+		}
+
+		if err := ctx.Push(r.RepoDir, "origin", branch); err != nil {
+			return err
+		}
 	}
 
 	// Compute and store checksums
@@ -459,9 +501,12 @@ func (r *Runner) Step4_SecondClone() error {
 	if r.Scenario.Protocol == "local" {
 		// For local protocol, use the first repo directory
 		cloneURL = r.RepoDir
-	} else if r.Scenario.ServerURL != "" {
-		// Use the configured server URL
-		cloneURL = r.Scenario.ServerURL
+	} else if r.GitHubURL != "" {
+		// Use the GitHub repository URL
+		cloneURL = r.GitHubURL
+	} else if r.BareRepoURL != "" {
+		// Use the bare repository URL
+		cloneURL = r.BareRepoURL
 	} else {
 		return fmt.Errorf("no remote URL configured for cloning")
 	}
@@ -544,14 +589,20 @@ func (r *Runner) Step5_SecondClientPush() error {
 	}
 
 	// Push changes (if remote is configured)
-	if r.Scenario.Protocol != "local" && r.Scenario.ServerURL != "" {
+	if r.GitHubURL != "" || r.BareRepoURL != "" {
 		if r.Debug {
 			fmt.Println("Pushing changes to remote...")
 		}
-		// TODO: Set up remote first
-		// if err := ctx.Push(r.Repo2Dir, "origin", "main"); err != nil {
-		// 	return err
-		// }
+		// Determine the default branch name
+		branchResult := timing.Run("git", []string{"-C", r.Repo2Dir, "branch", "--show-current"}, nil)
+		branch := "master"
+		if branchResult.ExitCode == 0 && branchResult.Stdout != "" {
+			branch = strings.TrimSpace(branchResult.Stdout)
+		}
+
+		if err := ctx.Push(r.Repo2Dir, "origin", branch); err != nil {
+			return err
+		}
 	}
 
 	// Compute and store checksums
@@ -576,18 +627,21 @@ func (r *Runner) Step5_SecondClientPush() error {
 
 // Step6_FirstClientPull: Pull changes to first client
 func (r *Runner) Step6_FirstClientPull() error {
+	ctx := &git.Context{
+		DB:         r.DB,
+		RunID:      r.RunID,
+		StepNumber: 6,
+		Debug:      r.Debug,
+		WorkDir:    r.WorkDir,
+	}
+
 	// Pull changes from remote (if configured)
-	if r.Scenario.Protocol != "local" && r.Scenario.ServerURL != "" {
+	if r.GitHubURL != "" || r.BareRepoURL != "" {
 		if r.Debug {
 			fmt.Println("Pulling changes from remote...")
 		}
-		// TODO: Set up remote and use ctx.Pull
-		// ctx := &git.Context{DB: r.DB, RunID: r.RunID, StepNumber: 6, Debug: r.Debug, WorkDir: r.WorkDir}
-		// if err := ctx.Pull(r.RepoDir); err != nil {
-		// 	return err
-		// }
-		if r.Debug {
-			fmt.Println("  (Skipping pull - remote not yet configured)")
+		if err := ctx.Pull(r.RepoDir); err != nil {
+			return err
 		}
 	} else if r.Scenario.Protocol == "local" {
 		if r.Debug {
