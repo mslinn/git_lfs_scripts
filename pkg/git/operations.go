@@ -37,15 +37,15 @@ func (ctx *Context) recordOperation(opType, command string, result *timing.Resul
 	}
 
 	op := &database.Operation{
-		RunID:       ctx.RunID,
-		StepNumber:  ctx.StepNumber,
-		Operation:   opType,
-		StartedAt:   time.Now().Add(-time.Duration(result.DurationMs) * time.Millisecond),
-		DurationMs:  result.DurationMs,
-		FileCount:   nil, // TODO: extract from output
-		TotalBytes:  nil, // TODO: extract from output
-		Status:      status,
-		Error:       errorMsg,
+		RunID:      ctx.RunID,
+		StepNumber: ctx.StepNumber,
+		Operation:  opType,
+		StartedAt:  time.Now().Add(-time.Duration(result.DurationMs) * time.Millisecond),
+		DurationMs: result.DurationMs,
+		FileCount:  nil, // TODO: extract from output
+		TotalBytes: nil, // TODO: extract from output
+		Status:     status,
+		Error:      errorMsg,
 	}
 
 	return ctx.DB.CreateOperation(op)

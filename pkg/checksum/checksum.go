@@ -122,12 +122,12 @@ func StoreChecksums(db *database.DB, runID int64, stepNumber int, checksums []*F
 
 // Difference represents a checksum difference between two steps
 type Difference struct {
-	FilePath    string
-	OldCRC32    string
-	OldSize     int64
-	NewCRC32    string
-	NewSize     int64
-	ChangeType  string // "added", "modified", "deleted", "size-changed"
+	FilePath   string
+	OldCRC32   string
+	OldSize    int64
+	NewCRC32   string
+	NewSize    int64
+	ChangeType string // "added", "modified", "deleted", "size-changed"
 }
 
 // CompareChecksums compares checksums between two steps
@@ -219,10 +219,10 @@ func FormatSize(bytes int64) string {
 
 // ChecksumExport represents checksums in JSON format for export
 type ChecksumExport struct {
-	RunID      int64            `json:"run_id"`
-	StepNumber int              `json:"step_number"`
-	Checksums  []*FileChecksum  `json:"checksums"`
-	ComputedAt time.Time        `json:"computed_at"`
+	RunID      int64           `json:"run_id"`
+	StepNumber int             `json:"step_number"`
+	Checksums  []*FileChecksum `json:"checksums"`
+	ComputedAt time.Time       `json:"computed_at"`
 }
 
 // ExportJSON exports checksums to JSON format
