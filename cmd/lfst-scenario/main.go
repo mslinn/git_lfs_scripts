@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
+	"syscall"
 
 	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
@@ -26,13 +28,13 @@ func main() {
 		listOnly    bool
 	)
 
-	pflag.BoolVarP(&showVersion, "version",  "V", false,  "Show version and exit")
-	pflag.BoolVarP(&showHelp,    "help",     "h", false,  "Show this help message")
-	pflag.BoolVarP(&verbose,     "verbose",  "v", false,  "Enable verbose output")
-	pflag.BoolVarP(&force,       "force",    "f", false,  "Force recreation of existing repositories")
 	pflag.StringVar(&dbPath,     "db",       "",          "Path to SQLite database (default from config)")
-	pflag.StringVar(&workDir,    "work-dir", "/tmp/lfst", "Working directory for test execution")
+	pflag.BoolVarP(&force,       "force",    "f", false,  "Force recreation of existing repositories")
+	pflag.BoolVarP(&showHelp,    "help",     "h", false,  "Show this help message")
 	pflag.BoolVarP(&listOnly,    "list",     "L", false,  "List available scenarios and exit")
+	pflag.BoolVarP(&verbose,     "verbose",  "v", false,  "Enable verbose output")
+	pflag.BoolVarP(&showVersion, "version",  "V", false,  "Show version and exit")
+	pflag.StringVar(&workDir,    "work-dir", "/tmp/lfst", "Working directory for test execution")
 
 	pflag.Parse()
 
@@ -57,8 +59,7 @@ func main() {
 	// Get scenario ID
 	args := pflag.Args()
 	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "Error: scenario ID required\n\n")
-		printUsage()
+		printUsage("Error: scenario ID required")
 		os.Exit(1)
 	}
 
@@ -94,6 +95,12 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	// Check disk space (5GB minimum required)
+	if err := checkDiskSpace(workDir, 5*1024*1024*1024); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Create and run scenario
 	runner := scenario.NewRunner(scen, db, workDir, verbose, force)
@@ -137,21 +144,23 @@ func listScenarios() {
 		`))
 }
 
-func printUsage() {
+func printUsage(msg string) {
+  if msg != "" {
+    fmt.Fprint(os.Stderr, msg + "\n")
+  }
 	fmt.Fprint(os.Stderr, dedent.Dedent(`
-		Usage: lfst-scenario [OPTIONS] SCENARIO_ID
+  Run a complete Git LFS test scenario (all 7 steps)
 
-		Run a complete Git LFS test scenario (all 7 steps)
+  Usage: lfst-scenario [OPTIONS] SCENARIO_ID
 
-		`))
+  OPTIONS:
+  `))
 	pflag.PrintDefaults()
 }
 
 func printHelp() {
 	fmt.Print(dedent.Dedent(fmt.Sprintf(`
-		lfst-scenario - Execute complete Git LFS test scenarios
-
-		Version: %s
+		lfst-scenario v%s - Execute complete Git LFS test scenarios
 
 		DESCRIPTION:
 		  Executes a complete 7-step Git LFS evaluation scenario:
@@ -194,4 +203,38 @@ func printHelp() {
 		  - Checksums are computed and stored for each step
 
 		`))
+}
+
+// checkDiskSpace verifies that the filesystem containing dir has at least minBytes of free space.
+// If dir doesn't exist, it checks the first existing ancestor directory.
+func checkDiskSpace(dir string, minBytes uint64) error {
+	// Find the first existing ancestor directory
+	checkPath := dir
+	for {
+		if _, err := os.Stat(checkPath); err == nil {
+			break // Found existing directory
+		}
+		parent := filepath.Dir(checkPath)
+		if parent == checkPath {
+			// Reached root without finding existing directory
+			return fmt.Errorf("cannot find existing directory to check disk space")
+		}
+		checkPath = parent
+	}
+
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(checkPath, &stat); err != nil {
+		return fmt.Errorf("cannot check disk space for %s: %v", checkPath, err)
+	}
+
+	// Calculate available bytes
+	availableBytes := stat.Bavail * uint64(stat.Bsize)
+	availableGB := float64(availableBytes) / (1024 * 1024 * 1024)
+	requiredGB := float64(minBytes) / (1024 * 1024 * 1024)
+
+	if availableBytes < minBytes {
+		return fmt.Errorf("insufficient disk space on filesystem containing %s: %.2f GB available, %.2f GB required", dir, availableGB, requiredGB)
+	}
+
+	return nil
 }

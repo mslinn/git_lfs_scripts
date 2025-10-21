@@ -2,8 +2,12 @@ package scenario
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/mslinn/git_lfs_scripts/pkg/checksum"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
@@ -772,6 +776,94 @@ func (r *Runner) validatePrerequisites() error {
 
 	if r.Debug {
 		fmt.Printf("  ✓ Test data found at: %s\n", dataPath)
+	}
+
+	// Check LFS configuration and server connectivity
+	if err := r.checkLFSConfiguration(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// checkLFSConfiguration validates LFS setup for the scenario type.
+// For scenarios with ServerURL, checks server connectivity with short timeout.
+// For scenarios without ServerURL, warns about implementation status.
+func (r *Runner) checkLFSConfiguration() error {
+	if r.Scenario.ServerURL != "" {
+		// Scenario has an LFS server URL - check connectivity
+		if err := checkServerConnectivity(r.Scenario.ServerURL, 2*time.Second, r.Debug); err != nil {
+			return err
+		}
+		if r.Debug {
+			fmt.Printf("  ✓ LFS server is reachable at: %s\n", r.Scenario.ServerURL)
+		}
+	} else {
+		// Scenarios without ServerURL (e.g., bare local/SSH) may require additional setup
+		if r.Scenario.ServerType == "bare" {
+			if r.Debug {
+				fmt.Printf("  ⚠ Scenario %d uses bare repo without explicit LFS server URL\n", r.Scenario.ID)
+				fmt.Println("    This scenario may require a local bare repository to be set up manually")
+			}
+			// For now, just warn - these scenarios may not be fully implemented
+			return fmt.Errorf("scenario %d (%s) is not yet fully implemented\n\nScenarios with bare repositories require:\n  1. A bare git repository to be created\n  2. LFS storage configuration\n  3. Appropriate git remotes\n\nPlease use scenarios 6-7 (LFS Test Server) which are fully implemented", r.Scenario.ID, r.Scenario.Name)
+		}
+	}
+
+	return nil
+}
+
+// checkServerConnectivity verifies that the LFS server is reachable with a short timeout.
+// Returns a helpful error message if the server is not accessible.
+func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool) error {
+	// Parse the server URL
+	parsedURL, err := url.Parse(serverURL)
+	if err != nil {
+		return fmt.Errorf("invalid server URL '%s': %w", serverURL, err)
+	}
+
+	host := parsedURL.Host
+	if host == "" {
+		return fmt.Errorf("invalid server URL '%s': missing host", serverURL)
+	}
+
+	// Add default port if not specified
+	if parsedURL.Port() == "" {
+		switch parsedURL.Scheme {
+		case "http":
+			host = net.JoinHostPort(host, "80")
+		case "https":
+			host = net.JoinHostPort(host, "443")
+		}
+	}
+
+	// First, try TCP connection with short timeout
+	if debug {
+		fmt.Printf("  Checking TCP connectivity to %s (timeout: %.0fs)...\n", host, timeout.Seconds())
+	}
+	conn, err := net.DialTimeout("tcp", host, timeout)
+	if err != nil {
+		return fmt.Errorf("LFS server not reachable at %s (timeout after %.0fs)\n\nPlease ensure:\n  1. The LFS server is running\n  2. The hostname/IP is correct\n  3. Network connectivity is available\n\nError: %v", serverURL, timeout.Seconds(), err)
+	}
+	conn.Close()
+
+	// Try HTTP request to verify it's actually an HTTP server
+	if parsedURL.Scheme == "http" || parsedURL.Scheme == "https" {
+		if debug {
+			fmt.Printf("  Checking HTTP response from %s...\n", serverURL)
+		}
+		client := &http.Client{
+			Timeout: timeout,
+		}
+		resp, err := client.Get(serverURL)
+		if err != nil {
+			return fmt.Errorf("LFS server at %s is not responding to HTTP requests (timeout after %.0fs)\n\nPlease ensure the LFS server is running and configured correctly.\n\nError: %v", serverURL, timeout.Seconds(), err)
+		}
+		resp.Body.Close()
+
+		if debug {
+			fmt.Printf("  HTTP response status: %d\n", resp.StatusCode)
+		}
 	}
 
 	return nil
