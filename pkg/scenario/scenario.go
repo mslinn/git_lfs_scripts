@@ -1,6 +1,7 @@
 package scenario
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -807,7 +808,7 @@ func (r *Runner) checkLFSConfiguration() error {
 				fmt.Println("    This scenario may require a local bare repository to be set up manually")
 			}
 			// For now, just warn - these scenarios may not be fully implemented
-			return fmt.Errorf(dedent.Dedent(fmt.Sprintf(`
+			return errors.New(dedent.Dedent(fmt.Sprintf(`
 				scenario %d (%s) is not yet fully implemented
 
 				Scenarios with bare repositories require:
@@ -853,7 +854,7 @@ func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool
 	}
 	conn, err := net.DialTimeout("tcp", host, timeout)
 	if err != nil {
-		return fmt.Errorf(dedent.Dedent(fmt.Sprintf(`
+		return errors.New(dedent.Dedent(fmt.Sprintf(`
 			LFS server not reachable at %s (timeout after %.0fs)
 
 			Please ensure:
@@ -876,7 +877,7 @@ func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool
 		}
 		resp, err := client.Get(serverURL)
 		if err != nil {
-			return fmt.Errorf(dedent.Dedent(fmt.Sprintf(`
+			return errors.New(dedent.Dedent(fmt.Sprintf(`
 				LFS server at %s is not responding to HTTP requests (timeout after %.0fs)
 
 				Please ensure the LFS server is running and configured correctly.
