@@ -10,10 +10,9 @@ echo
 rm -f test-remote.db test-remote.json
 
 echo "1. Creating test database and run..."
+# Scenario 6 = LFS Test Server - HTTP (server/protocol derived from scenario)
 ../bin/lfst-run --db test-remote.db create \
     --scenario 6 \
-    --server lfs-test-server \
-    --protocol http \
     --notes "Remote mode test"
 
 # Get the run ID (it will be 1 since this is a fresh database)

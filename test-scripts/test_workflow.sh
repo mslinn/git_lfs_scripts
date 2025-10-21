@@ -24,10 +24,9 @@ echo
 
 # Step 1: Create a test run
 echo -e "${BLUE}1. Creating test run for scenario 1...${NC}"
+# Scenario 1 = Bare repo - local (server/protocol derived from scenario)
 ../bin/lfst-run --db "$TEST_DB" create \
     --scenario 1 \
-    --server lfs-test-server \
-    --protocol http \
     --notes "Workflow demonstration test"
 
 RUN_ID=1

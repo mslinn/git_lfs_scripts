@@ -9,6 +9,7 @@ import (
 	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
+	"github.com/mslinn/git_lfs_scripts/pkg/scenario"
 	"github.com/spf13/pflag"
 )
 
@@ -92,65 +93,36 @@ func main() {
 func handleCreate(db *database.DB, args []string, debug bool) {
 	fs := pflag.NewFlagSet("create", pflag.ExitOnError)
 	scenarioID := fs.Int("scenario", 0, "Scenario ID (required)")
-	serverType := fs.String("server", "", "Server type: lfs-test-server, giftless, rudolfs, bare (required)")
-	protocol   := fs.String("protocol", "", "Protocol: http, https, ssh, local (required)")
-	gitServer  := fs.String("git-server", "bare", "Git server: bare, github")
 	notes      := fs.String("notes", "", "Optional notes about this test run")
 
 	fs.Parse(args)
 
 	// Validate required flags
 	if *scenarioID == 0 {
-		fmt.Fprintf(os.Stderr, "Error: --scenario is required\n")
-		os.Exit(1)
-	}
-	if *serverType == "" {
-		fmt.Fprintf(os.Stderr, "Error: --server is required\n")
-		os.Exit(1)
-	}
-	if *protocol == "" {
-		fmt.Fprintf(os.Stderr, "Error: --protocol is required\n")
+		fmt.Fprintf(os.Stderr, "Error: --scenario is required (use 'lfst-scenario --list' to see available scenarios)\n")
 		os.Exit(1)
 	}
 
-	// Validate server type
-	validServers := map[string]bool{
-		"lfs-test-server": true,
-		"giftless":        true,
-		"rudolfs":         true,
-		"bare":            true,
-	}
-	if !validServers[*serverType] {
-		fmt.Fprintf(os.Stderr, "Error: invalid server type '%s'\n", *serverType)
-		fmt.Fprintf(os.Stderr, "Valid types: lfs-test-server, giftless, rudolfs, bare\n")
-		os.Exit(1)
-	}
-
-	// Validate protocol
-	validProtocols := map[string]bool{
-		"http":  true,
-		"https": true,
-		"ssh":   true,
-		"local": true,
-	}
-	if !validProtocols[*protocol] {
-		fmt.Fprintf(os.Stderr, "Error: invalid protocol '%s'\n", *protocol)
-		fmt.Fprintf(os.Stderr, "Valid protocols: http, https, ssh, local\n")
+	// Get scenario details from centralized definitions
+	scen, err := scenario.GetScenario(*scenarioID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Use 'lfst-scenario --list' to see available scenarios\n")
 		os.Exit(1)
 	}
 
 	// Create test run
 	run := &database.TestRun{
 		ScenarioID: *scenarioID,
-		ServerType: *serverType,
-		Protocol:   *protocol,
-		GitServer:  *gitServer,
+		ServerType: scen.ServerType,
+		Protocol:   scen.Protocol,
+		GitServer:  scen.GitServer,
 		StartedAt:  time.Now(),
 		Status:     "running",
 		Notes:      *notes,
 	}
 
-	err := db.CreateTestRun(run)
+	err = db.CreateTestRun(run)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating test run: %v\n", err)
 		os.Exit(1)
@@ -163,12 +135,12 @@ func handleCreate(db *database.DB, args []string, debug bool) {
 			notesLine = fmt.Sprintf("  Notes: %s\n", *notes)
 		}
 		fmt.Print(dedent.Dedent(fmt.Sprintf(`
-			  Scenario: %d
+			  Scenario: %d (%s)
 			  Server: %s
 			  Protocol: %s
 			  Git Server: %s
 			  Status: running
-			%s`, *scenarioID, *serverType, *protocol, *gitServer, notesLine)))
+			%s`, *scenarioID, scen.Name, scen.ServerType, scen.Protocol, scen.GitServer, notesLine)))
 	}
 }
 
@@ -245,7 +217,7 @@ func handleList(db *database.DB, args []string, debug bool) {
 	}
 }
 
-func handleShow(db *database.DB, args []string, debug bool) {
+func handleShow(db *database.DB, args []string, _ bool) {
 	if len(args) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: run ID required\n")
 		fmt.Fprintf(os.Stderr, "Usage: lfst-run show <RUN_ID>\n")
@@ -490,8 +462,14 @@ func printHelp() {
 		  --db PATH          Path to SQLite database
 
 		EXAMPLES:
-		  # Create a new test run for scenario 1
-		  lfst-run create --scenario 1 --server lfs-test-server --protocol http
+		  # List available scenarios
+		  lfst-scenario --list
+
+		  # Create a new test run for scenario 6 (LFS Test Server - HTTP)
+		  lfst-run create --scenario 6
+
+		  # Create with notes
+		  lfst-run create --scenario 6 --notes "Testing HTTP push performance"
 
 		  # List all running test runs
 		  lfst-run list --status running

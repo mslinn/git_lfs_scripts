@@ -11,11 +11,11 @@ rm -f test_scenario6.db
 
 echo "1. Creating a test run..."
 # This will automatically create the database schema
-../bin/lfst-run --db test_scenario6.db create \
-    --scenario 6 \
-    --server lfs-test-server \
-    --protocol http \
-    --notes "Stage 1 test run"
+# Scenario 6 = LFS Test Server - HTTP (server/protocol derived from scenario)
+../bin/lfst-run create \
+  --db test_scenario6.db \
+  --scenario 6 \
+  --notes "Stage 1 test run"
 
 # Get the run ID (it will be 1 since this is a fresh database)
 RUN_ID=1
