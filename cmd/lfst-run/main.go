@@ -460,6 +460,7 @@ func printHelp() {
 		  -d, --debug        Enable debug output
 		  -v, --verbose      Enable verbose output (alias for --debug)
 		  --db PATH          Path to SQLite database
+		  --scenario id      Specify test scenario
 
 		EXAMPLES:
 		  # List available scenarios
