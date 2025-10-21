@@ -55,15 +55,15 @@ func GetScenario(id int) (*Scenario, error) {
 
 // Runner executes a scenario
 type Runner struct {
-	Scenario   *Scenario
-	DB         *database.DB
-	RunID      int64
-	Debug      bool
-	Force      bool   // Force recreation of existing repositories
-	WorkDir    string // Base directory for test operations
-	RepoDir    string // Repository directory (WorkDir/repo)
-	Repo2Dir   string // Second clone directory (WorkDir/repo2)
-	GitHubURL  string // GitHub clone URL (set during execution if created)
+	Scenario  *Scenario
+	DB        *database.DB
+	RunID     int64
+	Debug     bool
+	Force     bool   // Force recreation of existing repositories
+	WorkDir   string // Base directory for test operations
+	RepoDir   string // Repository directory (WorkDir/repo)
+	Repo2Dir  string // Second clone directory (WorkDir/repo2)
+	GitHubURL string // GitHub clone URL (set during execution if created)
 }
 
 // NewRunner creates a new scenario runner
@@ -794,7 +794,7 @@ func (r *Runner) validatePrerequisites() error {
 func (r *Runner) checkLFSConfiguration() error {
 	if r.Scenario.ServerURL != "" {
 		// Scenario has an LFS server URL - check connectivity
-		if err := checkServerConnectivity(r.Scenario.ServerURL, 2*time.Second, r.Debug); err != nil {
+		if err := checkServerConnectivity(r.Scenario.ServerURL, r.Scenario.ServerType, 2*time.Second, r.Debug); err != nil {
 			return err
 		}
 		if r.Debug {
@@ -824,9 +824,54 @@ func (r *Runner) checkLFSConfiguration() error {
 	return nil
 }
 
+// getServerStartupInstructions returns server-specific startup instructions.
+func getServerStartupInstructions(serverType, serverURL string) string {
+	parsedURL, _ := url.Parse(serverURL)
+	hostname := parsedURL.Hostname()
+
+	switch serverType {
+	case "lfs-test-server":
+		return dedent.Dedent(fmt.Sprintf(`
+			To start the LFS Test Server on %s:
+			  ssh %s
+			  cd /work/git/lfs-test-server
+			  ./lfs-test-server -addr :8080
+
+			Or see: https://github.com/git-lfs/lfs-test-server
+			`, hostname, hostname))
+
+	case "giftless":
+		return dedent.Dedent(fmt.Sprintf(`
+			To start Giftless on %s:
+			  ssh %s
+			  cd /work/git/giftless
+			  ./start-giftless.sh
+
+			Or see: https://github.com/datopian/giftless
+			`, hostname, hostname))
+
+	case "rudolfs":
+		return dedent.Dedent(fmt.Sprintf(`
+			To start Rudolfs on %s:
+			  ssh %s
+			  cd /work/git/rudolfs
+			  ./rudolfs --host 0.0.0.0 --port 8080
+
+			Or see: https://github.com/jasonwhite/rudolfs
+			`, hostname, hostname))
+
+	default:
+		return dedent.Dedent(fmt.Sprintf(`
+			To start the LFS server on %s:
+			  ssh %s
+			  # Start your LFS server according to its documentation
+			`, hostname, hostname))
+	}
+}
+
 // checkServerConnectivity verifies that the LFS server is reachable with a short timeout.
 // Returns a helpful error message if the server is not accessible.
-func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool) error {
+func checkServerConnectivity(serverURL, serverType string, timeout time.Duration, debug bool) error {
 	// Parse the server URL
 	parsedURL, err := url.Parse(serverURL)
 	if err != nil {
@@ -854,16 +899,18 @@ func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool
 	}
 	conn, err := net.DialTimeout("tcp", host, timeout)
 	if err != nil {
+		startupInstructions := getServerStartupInstructions(serverType, serverURL)
 		return errors.New(dedent.Dedent(fmt.Sprintf(`
 			LFS server not reachable at %s (timeout after %.0fs)
 
+			%s
 			Please ensure:
-			  1. The LFS server is running
+			  1. The LFS server is running (see instructions above)
 			  2. The hostname/IP is correct
 			  3. Network connectivity is available
 
 			Error: %v
-			`, serverURL, timeout.Seconds(), err)))
+			`, serverURL, timeout.Seconds(), startupInstructions, err)))
 	}
 	conn.Close()
 
@@ -877,13 +924,15 @@ func checkServerConnectivity(serverURL string, timeout time.Duration, debug bool
 		}
 		resp, err := client.Get(serverURL)
 		if err != nil {
+			startupInstructions := getServerStartupInstructions(serverType, serverURL)
 			return errors.New(dedent.Dedent(fmt.Sprintf(`
 				LFS server at %s is not responding to HTTP requests (timeout after %.0fs)
 
+				%s
 				Please ensure the LFS server is running and configured correctly.
 
 				Error: %v
-				`, serverURL, timeout.Seconds(), err)))
+				`, serverURL, timeout.Seconds(), startupInstructions, err)))
 		}
 		resp.Body.Close()
 
