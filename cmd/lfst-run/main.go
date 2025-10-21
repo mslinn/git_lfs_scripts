@@ -264,7 +264,7 @@ func handleShow(db *database.DB, args []string, _ bool) {
 		run.Status, run.StartedAt.Format("2006-01-02 15:04:05"), durationLine, notesLine)))
 }
 
-func handleComplete(db *database.DB, args []string, debug bool) {
+func handleComplete(db *database.DB, args []string, _ bool) {
 	if len(args) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: run ID required\n")
 		fmt.Fprintf(os.Stderr, "Usage: lfst-run complete <RUN_ID> [--notes \"message\"]\n")
@@ -309,7 +309,7 @@ func handleComplete(db *database.DB, args []string, debug bool) {
 	fmt.Printf("✓ Test run %d marked as completed (%.2fs)\n", runID, duration.Seconds())
 }
 
-func handleFail(db *database.DB, args []string, debug bool) {
+func handleFail(db *database.DB, args []string, _ bool) {
 	if len(args) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: run ID required\n")
 		fmt.Fprintf(os.Stderr, "Usage: lfst-run fail <RUN_ID> [--notes \"error message\"]\n")
@@ -354,7 +354,7 @@ func handleFail(db *database.DB, args []string, debug bool) {
 	fmt.Printf("✗ Test run %d marked as failed (%.2fs)\n", runID, duration.Seconds())
 }
 
-func handleUpdate(db *database.DB, args []string, debug bool) {
+func handleUpdate(db *database.DB, args []string, _ bool) {
 	if len(args) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: run ID required\n")
 		fmt.Fprintf(os.Stderr, "Usage: lfst-run update <RUN_ID> [--notes \"message\"] [--status STATUS]\n")
