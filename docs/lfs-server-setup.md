@@ -46,10 +46,50 @@ chmod +x /opt/lfs-test-server/start-lfs-server.sh
 
 ### 2. Start the Server
 
-On gojira:
+#### Manual Start
+
+To start the server manually on gojira:
 
 ```bash
 /opt/lfs-test-server/start-lfs-server.sh
+```
+
+This will:
+- Kill any existing lfs-test-server instance
+- Start a new instance with admin interface and verbose logging
+- Display server status information
+
+#### Automatic Start on Boot
+
+To start the server automatically when gojira boots, add this line to crontab:
+
+```bash
+# On gojira, edit crontab
+crontab -e
+
+# Add this line:
+@reboot sleep 60 && /opt/lfs-test-server/start-lfs-server.sh
+```
+
+The 60-second delay ensures the network is fully initialized before starting the server.
+
+#### Restart the Server
+
+If you need to restart the server (e.g., after configuration changes):
+
+```bash
+# Simply run the startup script again - it kills existing instances first
+/opt/lfs-test-server/start-lfs-server.sh
+```
+
+Or manually:
+
+```bash
+# Stop the server
+ssh gojira "pkill lfs-test-server"
+
+# Start it again
+ssh gojira "/opt/lfs-test-server/start-lfs-server.sh"
 ```
 
 ### 3. Create Test User
@@ -63,9 +103,12 @@ curl -u admin:admin123 -X POST \
 ```
 
 Verify user was created:
+
 ```bash
 curl -s -u admin:admin123 http://gojira:8080/mgmt/users | grep testuser
 ```
+
+**Note:** The test user only needs to be created once. The user account is stored in the database (`/opt/lfs-test-server/lfs.db`) and persists across server restarts and reboots. You don't need to recreate the user after restarting the server.
 
 ## Client Configuration
 
@@ -132,6 +175,30 @@ ssh gojira "tail -f /opt/lfs-test-server/lfs-server.log"
 ```bash
 ssh gojira "ps aux | grep lfs-test-server | grep -v grep"
 curl -v http://gojira:8080/
+```
+
+### Verify Automatic Startup After Reboot
+
+After rebooting gojira, verify the server started automatically:
+
+```bash
+# Wait at least 60 seconds after reboot, then check
+ssh gojira "ps aux | grep lfs-test-server | grep -v grep"
+
+# Check the log to see startup message
+ssh gojira "tail -20 /opt/lfs-test-server/lfs-server.log"
+
+# Verify server is responding
+curl -v http://gojira:8080/
+
+# Confirm test user still exists (should persist)
+curl -s -u admin:admin123 http://gojira:8080/mgmt/users | grep testuser
+```
+
+If the server didn't start automatically, check the crontab:
+
+```bash
+ssh gojira "crontab -l | grep lfs-test-server"
 ```
 
 ### Reset Server
