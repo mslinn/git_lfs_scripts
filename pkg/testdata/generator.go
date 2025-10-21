@@ -1,12 +1,15 @@
 package testdata
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/lithammer/dedent"
 )
 
 // FileSpec describes a test file to copy
@@ -65,6 +68,18 @@ func CopyRemoteFile(host, remotePath, destPath string, debug bool) error {
 		fmt.Printf("  Copying %s from %s via rsync\n", filepath.Base(destPath), host)
 	}
 
+	// Check if remote host is accessible before attempting rsync
+	if err := IsRemoteAccessible(host); err != nil {
+		return errors.New(dedent.Dedent(fmt.Sprintf(`
+			remote host %s is not accessible: %v
+
+			Please ensure:
+			  1. SSH is configured for passwordless access to %s
+			  2. The remote host is online
+			  3. Network connectivity is available
+			`, host, err, host)))
+	}
+
 	// Create parent directory if needed
 	dir := filepath.Dir(destPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -74,8 +89,10 @@ func CopyRemoteFile(host, remotePath, destPath string, debug bool) error {
 	// Use rsync for efficient remote copying
 	// -a: archive mode (preserves permissions, timestamps)
 	// -q: quiet mode (unless debug)
-	// -e ssh: use SSH
-	args := []string{"-a", "-e", "ssh"}
+	// -e ssh: use SSH with connection timeout
+	// --timeout=10: I/O timeout after 10 seconds of inactivity
+	sshOpts := "ssh -o ConnectTimeout=5 -o ServerAliveInterval=5 -o ServerAliveCountMax=2"
+	args := []string{"-a", "-e", sshOpts, "--timeout=10"}
 	if !debug {
 		args = append(args, "-q")
 	}
@@ -153,7 +170,7 @@ func IsRemoteAccessible(host string) error {
 
 // CheckRemoteDir checks if a directory exists on a remote host
 func CheckRemoteDir(host, path string) error {
-	cmd := exec.Command("ssh", host, "test", "-d", path)
+	cmd := exec.Command("ssh", "-o", "ConnectTimeout=5", host, "test", "-d", path)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("remote directory %s:%s does not exist", host, path)
 	}
@@ -333,7 +350,7 @@ func TotalSize(specs []FileSpec) (int64, error) {
 
 // GetRemoteFileSize gets the size of a file on a remote host via SSH
 func GetRemoteFileSize(host, path string) (int64, error) {
-	cmd := exec.Command("ssh", host, "stat", "-c", "%s", path)
+	cmd := exec.Command("ssh", "-o", "ConnectTimeout=5", host, "stat", "-c", "%s", path)
 	output, err := cmd.Output()
 	if err != nil {
 		return 0, fmt.Errorf("failed to stat remote file: %w", err)
