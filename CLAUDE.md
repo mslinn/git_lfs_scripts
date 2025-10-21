@@ -197,3 +197,48 @@ Test data is large (~2.4GB) and not stored in repo. Location controlled by:
 3. Standard locations (see `pkg/testdata/generator.go`)
 
 Data includes: Big Buck Bunny videos (CC BY 3.0), Project Gutenberg archives, NYC taxi datasets, test PDFs.
+
+### LFS Server Configuration
+
+**IMPORTANT - Verbose Mode Requirement:**
+
+All Git LFS servers should be configured to run in verbose mode during testing. This provides essential verification that tests are performing the operations they claim to perform.
+
+**Why Verbose Mode Matters:**
+
+- Users need to see server-side evidence of client operations
+- Server logs provide independent verification of push/pull/clone operations
+- Helps troubleshoot failures by showing server-side errors
+- Confirms LFS objects are actually being transferred to/from the server
+- Validates that the test harness is correctly exercising server functionality
+
+**Server-Specific Verbose Configuration:**
+
+- **lfs-test-server**: Start with `-verbose` flag or set log level in config
+- **Giftless**: Configure logging level to DEBUG in config file
+- **Rudolfs**: Use `-v` or `--verbose` flag, or set `RUST_LOG=debug`
+- **Git LFS on bare repos**: Set `GIT_TRACE=1` and `GIT_CURL_VERBOSE=1` environment variables
+
+**User Instructions:**
+
+When documenting test procedures, always include instructions to:
+
+
+1. Start the LFS server in verbose mode before running tests
+2. Monitor server logs in a separate terminal window during test execution
+3. Verify that server logs show expected operations (uploads, downloads, batch requests)
+4. Compare client-side test output with server-side log evidence
+
+
+Example setup for lfs-test-server on gojira:
+
+```bash
+# On server (gojira)
+lfs-test-server -verbose -addr :8080
+
+# On client (bear/camille) - in separate terminals
+tail -f /var/log/lfs-server.log  # Monitor logs
+bin/lfst-scenario 6 -v            # Run test
+```
+
+This ensures transparency and verifiability of all test operations.
