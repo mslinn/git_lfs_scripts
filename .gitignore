@@ -9,4 +9,5 @@
 .DS_Store
 .idea
 .claude/
+bin/
 test-lfs-repo/
