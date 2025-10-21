@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
 	"github.com/mslinn/git_lfs_scripts/pkg/scenario"
@@ -101,17 +102,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n✓ Scenario %d completed successfully\n", scenarioID)
-	fmt.Printf("  Run ID: %d\n", runner.RunID)
-	fmt.Printf("  View results: lfst-run show %d\n", runner.RunID)
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		✓ Scenario %d completed successfully
+		  Run ID: %d
+		  View results: lfst-run show %d
+		`, scenarioID, runner.RunID, runner.RunID)))
 }
 
 func listScenarios() {
 	scenarios := scenario.GetScenarios()
-	fmt.Println("Available scenarios:")
-	fmt.Println()
-	fmt.Println("ID  Server             Protocol  Git Server  Description")
-	fmt.Println("--  ------             --------  ----------  -----------")
+	fmt.Print(dedent.Dedent(`
+		Available scenarios:
+
+		ID  Server             Protocol  Git Server  Description
+		--  ------             --------  ----------  -----------
+		`))
 
 	// Print in order
 	ids := []int{1, 2, 6, 7, 8, 9, 13, 14}
@@ -126,54 +131,67 @@ func listScenarios() {
 		)
 	}
 
-	fmt.Println()
-	fmt.Println("Note: Only scenarios 1, 2, 6-9, and 13-14 are currently implemented.")
-	fmt.Println("      Additional scenarios require specific server configurations.")
+	fmt.Print(dedent.Dedent(`
+		Note: Only scenarios 1, 2, 6-9, and 13-14 are currently implemented.
+		      Additional scenarios require specific server configurations.
+		`))
 }
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: lfst-scenario [OPTIONS] SCENARIO_ID\n\n")
-	fmt.Fprintf(os.Stderr, "Run a complete Git LFS test scenario (all 7 steps)\n\n")
+	fmt.Fprint(os.Stderr, dedent.Dedent(`
+		Usage: lfst-scenario [OPTIONS] SCENARIO_ID
+
+		Run a complete Git LFS test scenario (all 7 steps)
+
+		`))
 	pflag.PrintDefaults()
 }
 
 func printHelp() {
-	fmt.Printf("lfst-scenario - Execute complete Git LFS test scenarios\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Executes a complete 7-step Git LFS evaluation scenario:\n")
-	fmt.Printf("    1. Setup repository, configure LFS, copy initial files (~1.3GB)\n")
-	fmt.Printf("    2. Add, commit, and push with timing measurements\n")
-	fmt.Printf("    3. Modify, delete, and rename files\n")
-	fmt.Printf("    4. Clone to second machine and verify checksums\n")
-	fmt.Printf("    5. Make changes on second machine\n")
-	fmt.Printf("    6. Pull changes back to first machine\n")
-	fmt.Printf("    7. Untrack files from LFS\n\n")
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-scenario - Execute complete Git LFS test scenarios
 
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-scenario [OPTIONS] SCENARIO_ID\n\n")
+		Version: %s
 
-	fmt.Printf("OPTIONS:\n")
+		DESCRIPTION:
+		  Executes a complete 7-step Git LFS evaluation scenario:
+		    1. Setup repository, configure LFS, copy initial files (~1.3GB)
+		    2. Add, commit, and push with timing measurements
+		    3. Modify, delete, and rename files
+		    4. Clone to second machine and verify checksums
+		    5. Make changes on second machine
+		    6. Pull changes back to first machine
+		    7. Untrack files from LFS
+
+		USAGE:
+		  lfst-scenario [OPTIONS] SCENARIO_ID
+
+		OPTIONS:
+		`, version)))
 	pflag.PrintDefaults()
 
-	fmt.Printf("\nEXAMPLES:\n")
-	fmt.Printf("  # List available scenarios\n")
-	fmt.Printf("  lfst-scenario --list\n\n")
+	fmt.Print(dedent.Dedent(`
 
-	fmt.Printf("  # Run scenario 6 (LFS Test Server - HTTP)\n")
-	fmt.Printf("  lfst-scenario 6\n\n")
+		EXAMPLES:
+		  # List available scenarios
+		  lfst-scenario --list
 
-	fmt.Printf("  # Run with verbose output\n")
-	fmt.Printf("  lfst-scenario -v 6\n\n")
+		  # Run scenario 6 (LFS Test Server - HTTP)
+		  lfst-scenario 6
 
-	fmt.Printf("  # Use custom work directory\n")
-	fmt.Printf("  lfst-scenario --work-dir /mnt/o/lfs_test 6\n\n")
+		  # Run with verbose output
+		  lfst-scenario -v 6
 
-	fmt.Printf("NOTES:\n")
-	fmt.Printf("  - Requires ~2.4GB of test data (set LFS_TEST_DATA environment variable)\n")
-	fmt.Printf("  - Work directory should have at least 5GB free space\n")
-	fmt.Printf("  - For remote scenarios, requires passwordless SSH to gojira\n")
-	fmt.Printf("  - Each run creates a test_run record in the database\n")
-	fmt.Printf("  - All operations are timed with millisecond precision\n")
-	fmt.Printf("  - Checksums are computed and stored for each step\n\n")
+		  # Use custom work directory
+		  lfst-scenario --work-dir /mnt/o/lfs_test 6
+
+		NOTES:
+		  - Requires ~2.4GB of test data (set LFS_TEST_DATA environment variable)
+		  - Work directory should have at least 5GB free space
+		  - For remote scenarios, requires passwordless SSH to gojira
+		  - Each run creates a test_run record in the database
+		  - All operations are timed with millisecond precision
+		  - Checksums are computed and stored for each step
+
+		`))
 }

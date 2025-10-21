@@ -5,6 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/checksum"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
@@ -213,11 +214,14 @@ func handleStats(db *database.DB, args []string, debug bool) {
 			os.Exit(1)
 		}
 
-		fmt.Printf("Test Run %d Statistics:\n\n", *runID)
-		fmt.Printf("  Scenario:     %d\n", run.ScenarioID)
-		fmt.Printf("  Server:       %s\n", run.ServerType)
-		fmt.Printf("  Protocol:     %s\n", run.Protocol)
-		fmt.Printf("  Status:       %s\n", run.Status)
+		fmt.Print(dedent.Dedent(fmt.Sprintf(`
+			Test Run %d Statistics:
+
+			  Scenario:     %d
+			  Server:       %s
+			  Protocol:     %s
+			  Status:       %s
+			`, *runID, run.ScenarioID, run.ServerType, run.Protocol, run.Status)))
 
 		// Count checksums per step
 		rows, err := db.QueryRaw("SELECT step_number, COUNT(*) FROM checksums WHERE run_id = ? GROUP BY step_number ORDER BY step_number", *runID)
@@ -389,44 +393,49 @@ func printUsage() {
 }
 
 func printHelp() {
-	fmt.Printf("lfst-query - Query and report on Git LFS test data\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Query the test database to inspect checksums, compare steps,\n")
-	fmt.Printf("  view operations, and generate statistics.\n\n")
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-query - Query and report on Git LFS test data
 
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-query [OPTIONS] COMMAND [ARGS...]\n\n")
+		Version: %s
 
-	fmt.Printf("COMMANDS:\n")
-	fmt.Printf("  checksums    Show checksums for a specific run and step\n")
-	fmt.Printf("  compare      Compare checksums between two steps\n")
-	fmt.Printf("  stats        Show statistics about test runs\n")
-	fmt.Printf("  operations   Show operations recorded for a test run\n\n")
+		DESCRIPTION:
+		  Query the test database to inspect checksums, compare steps,
+		  view operations, and generate statistics.
 
-	fmt.Printf("GLOBAL OPTIONS:\n")
-	fmt.Printf("  -h, --help         Show this help message\n")
-	fmt.Printf("  -V, --version      Show version\n")
-	fmt.Printf("  -d, --debug        Enable debug output\n")
-	fmt.Printf("  -v, --verbose      Enable verbose output (alias for --debug)\n")
-	fmt.Printf("  --db PATH          Path to SQLite database\n\n")
+		USAGE:
+		  lfst-query [OPTIONS] COMMAND [ARGS...]
 
-	fmt.Printf("EXAMPLES:\n")
-	fmt.Printf("  # Show checksums for run 5, step 1\n")
-	fmt.Printf("  lfst-query checksums --run-id 5 --step 1\n\n")
+		COMMANDS:
+		  checksums    Show checksums for a specific run and step
+		  compare      Compare checksums between two steps
+		  stats        Show statistics about test runs
+		  operations   Show operations recorded for a test run
 
-	fmt.Printf("  # Compare checksums between step 1 and step 3\n")
-	fmt.Printf("  lfst-query compare --run-id 5 --from 1 --to 3\n\n")
+		GLOBAL OPTIONS:
+		  -h, --help         Show this help message
+		  -V, --version      Show version
+		  -d, --debug        Enable debug output
+		  -v, --verbose      Enable verbose output (alias for --debug)
+		  --db PATH          Path to SQLite database
 
-	fmt.Printf("  # Show statistics for test run 5\n")
-	fmt.Printf("  lfst-query stats --run-id 5\n\n")
+		EXAMPLES:
+		  # Show checksums for run 5, step 1
+		  lfst-query checksums --run-id 5 --step 1
 
-	fmt.Printf("  # Show overall database statistics\n")
-	fmt.Printf("  lfst-query stats\n\n")
+		  # Compare checksums between step 1 and step 3
+		  lfst-query compare --run-id 5 --from 1 --to 3
 
-	fmt.Printf("  # Show operations for test run 5, step 2\n")
-	fmt.Printf("  lfst-query operations --run-id 5 --step 2\n\n")
+		  # Show statistics for test run 5
+		  lfst-query stats --run-id 5
 
-	fmt.Printf("For command-specific help:\n")
-	fmt.Printf("  lfst-query COMMAND --help\n\n")
+		  # Show overall database statistics
+		  lfst-query stats
+
+		  # Show operations for test run 5, step 2
+		  lfst-query operations --run-id 5 --step 2
+
+		For command-specific help:
+		  lfst-query COMMAND --help
+
+		`, version)))
 }

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/checksum"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
@@ -108,37 +109,45 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Printf("lfst-import - Import checksum data from JSON into database\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Imports checksum data from JSON format (exported by lfst-checksum)\n")
-	fmt.Printf("  into the SQLite database. Reads from stdin or a file.\n\n")
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-import - Import checksum data from JSON into database
 
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-import [OPTIONS] [JSON_FILE]\n")
-	fmt.Printf("  lfst-import --stdin < checksums.json\n")
-	fmt.Printf("  cat checksums.json | lfst-import\n\n")
+		Version: %s
 
-	fmt.Printf("OPTIONS:\n")
+		DESCRIPTION:
+		  Imports checksum data from JSON format (exported by lfst-checksum)
+		  into the SQLite database. Reads from stdin or a file.
+
+		USAGE:
+		  lfst-import [OPTIONS] [JSON_FILE]
+		  lfst-import --stdin < checksums.json
+		  cat checksums.json | lfst-import
+
+		OPTIONS:
+		`, version)))
 	pflag.PrintDefaults()
 
-	fmt.Printf("\nEXAMPLES:\n")
-	fmt.Printf("  # Import from file\n")
-	fmt.Printf("  lfst-import checksums.json\n\n")
+	fmt.Print(dedent.Dedent(`
 
-	fmt.Printf("  # Import from stdin\n")
-	fmt.Printf("  cat checksums.json | lfst-import\n\n")
+		EXAMPLES:
+		  # Import from file
+		  lfst-import checksums.json
 
-	fmt.Printf("  # Import via SSH (typical remote usage)\n")
-	fmt.Printf("  cat checksums.json | ssh gojira lfst-import --stdin\n\n")
+		  # Import from stdin
+		  cat checksums.json | lfst-import
 
-	fmt.Printf("  # Custom database location\n")
-	fmt.Printf("  lfst-import --db /custom/path/test.db checksums.json\n\n")
+		  # Import via SSH (typical remote usage)
+		  cat checksums.json | ssh gojira lfst-import --stdin
 
-	fmt.Printf("CONFIGURATION:\n")
-	fmt.Printf("  Database path can be set via:\n")
-	fmt.Printf("  1. --db flag (highest priority)\n")
-	fmt.Printf("  2. LFS_TEST_DB environment variable\n")
-	fmt.Printf("  3. ~/.lfs-test-config file\n")
-	fmt.Printf("  4. Default: /home/mslinn/lfs_eval/lfs-test.db\n\n")
+		  # Custom database location
+		  lfst-import --db /custom/path/test.db checksums.json
+
+		CONFIGURATION:
+		  Database path can be set via:
+		  1. --db flag (highest priority)
+		  2. LFS_TEST_DB environment variable
+		  3. ~/.lfs-test-config file
+		  4. Default: /home/mslinn/lfs_eval/lfs-test.db
+
+		`))
 }

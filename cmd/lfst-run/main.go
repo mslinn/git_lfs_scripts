@@ -6,6 +6,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
 	"github.com/spf13/pflag"
@@ -157,14 +158,17 @@ func handleCreate(db *database.DB, args []string, debug bool) {
 
 	fmt.Printf("Created test run ID: %d\n", run.ID)
 	if debug {
-		fmt.Printf("  Scenario: %d\n", *scenarioID)
-		fmt.Printf("  Server: %s\n", *serverType)
-		fmt.Printf("  Protocol: %s\n", *protocol)
-		fmt.Printf("  Git Server: %s\n", *gitServer)
-		fmt.Printf("  Status: running\n")
+		notesLine := ""
 		if *notes != "" {
-			fmt.Printf("  Notes: %s\n", *notes)
+			notesLine = fmt.Sprintf("  Notes: %s\n", *notes)
 		}
+		fmt.Print(dedent.Dedent(fmt.Sprintf(`
+			  Scenario: %d
+			  Server: %s
+			  Protocol: %s
+			  Git Server: %s
+			  Status: running
+			%s`, *scenarioID, *serverType, *protocol, *gitServer, notesLine)))
 	}
 }
 
@@ -260,26 +264,32 @@ func handleShow(db *database.DB, args []string, debug bool) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Test Run %d:\n", run.ID)
-	fmt.Printf("  Scenario ID:  %d\n", run.ScenarioID)
-	fmt.Printf("  Server Type:  %s\n", run.ServerType)
-	fmt.Printf("  Protocol:     %s\n", run.Protocol)
-	fmt.Printf("  Git Server:   %s\n", run.GitServer)
-	fmt.Printf("  Status:       %s\n", run.Status)
-	fmt.Printf("  Started:      %s\n", run.StartedAt.Format("2006-01-02 15:04:05"))
-
+	durationLine := ""
 	if run.CompletedAt != nil {
-		fmt.Printf("  Completed:    %s\n", run.CompletedAt.Format("2006-01-02 15:04:05"))
 		duration := run.CompletedAt.Sub(run.StartedAt)
-		fmt.Printf("  Duration:     %.2fs\n", duration.Seconds())
+		durationLine = fmt.Sprintf("  Completed:    %s\n  Duration:     %.2fs",
+			run.CompletedAt.Format("2006-01-02 15:04:05"), duration.Seconds())
 	} else {
 		duration := time.Since(run.StartedAt)
-		fmt.Printf("  Running for:  %.2fs\n", duration.Seconds())
+		durationLine = fmt.Sprintf("  Running for:  %.2fs", duration.Seconds())
 	}
 
+	notesLine := ""
 	if run.Notes != "" {
-		fmt.Printf("  Notes:        %s\n", run.Notes)
+		notesLine = fmt.Sprintf("\n  Notes:        %s", run.Notes)
 	}
+
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		Test Run %d:
+		  Scenario ID:  %d
+		  Server Type:  %s
+		  Protocol:     %s
+		  Git Server:   %s
+		  Status:       %s
+		  Started:      %s
+		%s%s
+		`, run.ID, run.ScenarioID, run.ServerType, run.Protocol, run.GitServer,
+		run.Status, run.StartedAt.Format("2006-01-02 15:04:05"), durationLine, notesLine)))
 }
 
 func handleComplete(db *database.DB, args []string, debug bool) {
@@ -452,46 +462,51 @@ func printUsage() {
 }
 
 func printHelp() {
-	fmt.Printf("lfst-run - Manage Git LFS test run lifecycle\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Create and manage test run records in the database. Each test run\n")
-	fmt.Printf("  represents one execution of a Git LFS test scenario.\n\n")
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-run - Manage Git LFS test run lifecycle
 
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-run [OPTIONS] COMMAND [ARGS...]\n\n")
+		Version: %s
 
-	fmt.Printf("COMMANDS:\n")
-	fmt.Printf("  create    Create a new test run\n")
-	fmt.Printf("  list      List test runs\n")
-	fmt.Printf("  show      Show details of a test run\n")
-	fmt.Printf("  complete  Mark a test run as completed\n")
-	fmt.Printf("  fail      Mark a test run as failed\n")
-	fmt.Printf("  update    Update test run notes or status\n\n")
+		DESCRIPTION:
+		  Create and manage test run records in the database. Each test run
+		  represents one execution of a Git LFS test scenario.
 
-	fmt.Printf("GLOBAL OPTIONS:\n")
-	fmt.Printf("  -h, --help         Show this help message\n")
-	fmt.Printf("  -V, --version      Show version\n")
-	fmt.Printf("  -d, --debug        Enable debug output\n")
-	fmt.Printf("  -v, --verbose      Enable verbose output (alias for --debug)\n")
-	fmt.Printf("  --db PATH          Path to SQLite database\n\n")
+		USAGE:
+		  lfst-run [OPTIONS] COMMAND [ARGS...]
 
-	fmt.Printf("EXAMPLES:\n")
-	fmt.Printf("  # Create a new test run for scenario 1\n")
-	fmt.Printf("  lfst-run create --scenario 1 --server lfs-test-server --protocol http\n\n")
+		COMMANDS:
+		  create    Create a new test run
+		  list      List test runs
+		  show      Show details of a test run
+		  complete  Mark a test run as completed
+		  fail      Mark a test run as failed
+		  update    Update test run notes or status
 
-	fmt.Printf("  # List all running test runs\n")
-	fmt.Printf("  lfst-run list --status running\n\n")
+		GLOBAL OPTIONS:
+		  -h, --help         Show this help message
+		  -V, --version      Show version
+		  -d, --debug        Enable debug output
+		  -v, --verbose      Enable verbose output (alias for --debug)
+		  --db PATH          Path to SQLite database
 
-	fmt.Printf("  # Show details of test run 5\n")
-	fmt.Printf("  lfst-run show 5\n\n")
+		EXAMPLES:
+		  # Create a new test run for scenario 1
+		  lfst-run create --scenario 1 --server lfs-test-server --protocol http
 
-	fmt.Printf("  # Mark test run 5 as completed\n")
-	fmt.Printf("  lfst-run complete 5 --notes \"All tests passed\"\n\n")
+		  # List all running test runs
+		  lfst-run list --status running
 
-	fmt.Printf("  # Mark test run 6 as failed\n")
-	fmt.Printf("  lfst-run fail 6 --notes \"Push operation failed\"\n\n")
+		  # Show details of test run 5
+		  lfst-run show 5
 
-	fmt.Printf("For command-specific help:\n")
-	fmt.Printf("  lfst-run COMMAND --help\n\n")
+		  # Mark test run 5 as completed
+		  lfst-run complete 5 --notes "All tests passed"
+
+		  # Mark test run 6 as failed
+		  lfst-run fail 6 --notes "Push operation failed"
+
+		For command-specific help:
+		  lfst-run COMMAND --help
+
+		`, version)))
 }

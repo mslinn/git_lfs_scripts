@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/checksum"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
@@ -275,55 +276,65 @@ func printUsage() {
 }
 
 func printHelp() {
-	fmt.Printf("lfst-checksum - Compute and verify CRC32 checksums for Git LFS testing\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Computes CRC32 checksums for all files in a directory (recursively),\n")
-	fmt.Printf("  stores them in a SQLite database, and optionally compares with checksums\n")
-	fmt.Printf("  from a previous step to detect file changes.\n\n")
-	fmt.Printf("  Files in .git/ directories and files named .checksums are automatically skipped.\n\n")
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-checksum - Compute and verify CRC32 checksums for Git LFS testing
 
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-checksum --run-id ID --step N --dir PATH\n")
-	fmt.Printf("  lfst-checksum --run-id ID --step N --dir PATH --compare M\n")
-	fmt.Printf("  lfst-checksum --skip-db --dir PATH\n")
-	fmt.Printf("  lfst-checksum --local --run-id ID --step N --dir PATH\n")
-	fmt.Printf("  lfst-checksum --remote HOST --run-id ID --step N --dir PATH\n\n")
+		Version: %s
 
-	fmt.Printf("OPTIONS:\n")
+		DESCRIPTION:
+		  Computes CRC32 checksums for all files in a directory (recursively),
+		  stores them in a SQLite database, and optionally compares with checksums
+		  from a previous step to detect file changes.
+
+		  Files in .git/ directories and files named .checksums are automatically skipped.
+
+		USAGE:
+		  lfst-checksum --run-id ID --step N --dir PATH
+		  lfst-checksum --run-id ID --step N --dir PATH --compare M
+		  lfst-checksum --skip-db --dir PATH
+		  lfst-checksum --local --run-id ID --step N --dir PATH
+		  lfst-checksum --remote HOST --run-id ID --step N --dir PATH
+
+		OPTIONS:
+		`, version)))
 	pflag.PrintDefaults()
 
-	fmt.Printf("\nEXAMPLES:\n")
-	fmt.Printf("  # Compute and display checksums without database\n")
-	fmt.Printf("  lfst-checksum --skip-db --dir /path/to/repo\n\n")
+	fmt.Print(dedent.Dedent(`
 
-	fmt.Printf("  # Store checksums for step 1 of test run 5\n")
-	fmt.Printf("  lfst-checksum --run-id 5 --step 1 --dir /path/to/repo\n\n")
+		EXAMPLES:
+		  # Compute and display checksums without database
+		  lfst-checksum --skip-db --dir /path/to/repo
 
-	fmt.Printf("  # Store checksums for step 3 and compare with step 1\n")
-	fmt.Printf("  lfst-checksum --run-id 5 --step 3 --dir /path/to/repo --compare 1\n\n")
+		  # Store checksums for step 1 of test run 5
+		  lfst-checksum --run-id 5 --step 1 --dir /path/to/repo
 
-	fmt.Printf("  # Debug mode with verbose output\n")
-	fmt.Printf("  lfst-checksum -d --run-id 5 --step 1 --dir /path/to/repo\n\n")
+		  # Store checksums for step 3 and compare with step 1
+		  lfst-checksum --run-id 5 --step 3 --dir /path/to/repo --compare 1
 
-	fmt.Printf("REMOTE MODE:\n")
-	fmt.Printf("  By default, lfst-checksum auto-detects if it's running on a remote machine\n")
-	fmt.Printf("  (hostname != gojira) and automatically uses SSH to send data to the server.\n\n")
-	fmt.Printf("  - --local: Force local mode (disable auto-remote)\n")
-	fmt.Printf("  - --remote HOST: Force remote mode with specific host\n")
-	fmt.Printf("  - Auto-remote can be disabled in ~/.lfs-test-config\n\n")
+		  # Verbose mode with output
+		  lfst-checksum -v --run-id 5 --step 1 --dir /path/to/repo
 
-	fmt.Printf("CONFIGURATION:\n")
-	fmt.Printf("  Configuration priority (highest to lowest):\n")
-	fmt.Printf("  1. Command-line flags (--db, --remote, --local)\n")
-	fmt.Printf("  2. Environment variables (LFS_TEST_DB, LFS_REMOTE_HOST)\n")
-	fmt.Printf("  3. Config file (~/.lfs-test-config)\n")
-	fmt.Printf("  4. Defaults (gojira, /home/mslinn/lfs_eval/lfs-test.db)\n\n")
+		REMOTE MODE:
+		  By default, lfst-checksum auto-detects if it's running on a remote machine
+		  (hostname != gojira) and automatically uses SSH to send data to the server.
 
-	fmt.Printf("NOTES:\n")
-	fmt.Printf("  - CRC32 values use the IEEE polynomial (same as cksum command)\n")
-	fmt.Printf("  - Checksums are stored with millisecond-precision timestamps\n")
-	fmt.Printf("  - The database file is created automatically if it doesn't exist\n")
-	fmt.Printf("  - Use --skip-db for quick checksum verification without database\n")
-	fmt.Printf("  - Remote mode requires passwordless SSH to the server\n\n")
+		  - --local: Force local mode (disable auto-remote)
+		  - --remote HOST: Force remote mode with specific host
+		  - Auto-remote can be disabled in ~/.lfs-test-config
+
+		CONFIGURATION:
+		  Configuration priority (highest to lowest):
+		  1. Command-line flags (--db, --remote, --local)
+		  2. Environment variables (LFS_TEST_DB, LFS_REMOTE_HOST)
+		  3. Config file (~/.lfs-test-config)
+		  4. Defaults (gojira, /home/mslinn/lfs_eval/lfs-test.db)
+
+		NOTES:
+		  - CRC32 values use the IEEE polynomial (same as cksum command)
+		  - Checksums are stored with millisecond-precision timestamps
+		  - The database file is created automatically if it doesn't exist
+		  - Use --skip-db for quick checksum verification without database
+		  - Remote mode requires passwordless SSH to the server
+
+		`))
 }

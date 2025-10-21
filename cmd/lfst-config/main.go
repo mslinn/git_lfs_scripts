@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/lithammer/dedent"
 	"github.com/mslinn/git_lfs_scripts/pkg/config"
 	"github.com/spf13/pflag"
 )
@@ -234,67 +235,77 @@ func printUsage() {
 }
 
 func printHelp() {
-	fmt.Printf("lfst-config - Manage LFS test configuration\n\n")
-	fmt.Printf("Version: %s\n\n", version)
-
-	fmt.Printf("DESCRIPTION:\n")
-	fmt.Printf("  Manages configuration for LFS test commands. Configuration is stored in\n")
-	fmt.Printf("  ~/.lfs-test-config by default and can be overridden with environment variables.\n\n")
-
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  lfst-config [OPTIONS] SUBCOMMAND\n\n")
-
-	fmt.Printf("SUBCOMMANDS:\n")
-	fmt.Printf("  init          Create default configuration file\n")
-	fmt.Printf("  set KEY VAL   Set a configuration value\n")
-	fmt.Printf("  get KEY       Get a configuration value\n")
-	fmt.Printf("  show          Display all configuration values\n")
-	fmt.Printf("  path          Show the config file path\n\n")
-
-	fmt.Printf("CONFIGURATION KEYS:\n")
-	fmt.Printf("  database      Path to SQLite database\n")
-	fmt.Printf("                Default: /home/$USER/lfs_eval/lfs-test.db\n\n")
-	fmt.Printf("  remote_host   Remote host for SSH operations\n")
-	fmt.Printf("                Default: gojira\n\n")
-	fmt.Printf("  auto_remote   Automatically detect remote execution\n")
-	fmt.Printf("                Default: true\n\n")
-
-	fmt.Printf("ENVIRONMENT VARIABLES:\n")
-	fmt.Printf("  LFS_TEST_CONFIG    Path to config file\n")
-	fmt.Printf("  LFS_TEST_DB        Override database path\n")
-	fmt.Printf("  LFS_REMOTE_HOST    Override remote host\n")
-	fmt.Printf("  LFS_AUTO_REMOTE    Override auto_remote (true/false)\n\n")
-
-	fmt.Printf("OPTIONS:\n")
-	pflag.PrintDefaults()
-
-	fmt.Printf("\nEXAMPLES:\n")
-	fmt.Printf("  # Create default config\n")
-	fmt.Printf("  lfst-config init\n\n")
-
-	fmt.Printf("  # Set custom database path\n")
-	fmt.Printf("  lfst-config set database /mnt/o/lfs-test.db\n\n")
-
-	fmt.Printf("  # Set remote host\n")
-	fmt.Printf("  lfst-config set remote_host myserver\n\n")
-
-	fmt.Printf("  # Disable auto-remote detection\n")
-	fmt.Printf("  lfst-config set auto_remote false\n\n")
-
-	fmt.Printf("  # View all configuration\n")
-	fmt.Printf("  lfst-config show\n\n")
-
-	fmt.Printf("  # Get specific value\n")
-	fmt.Printf("  lfst-config get database\n\n")
-
-	fmt.Printf("  # Find config file location\n")
-	fmt.Printf("  lfst-config path\n\n")
-
-	fmt.Printf("CONFIG FILE FORMAT:\n")
 	homeDir, _ := os.UserHomeDir()
 	defaultDB := filepath.Join(homeDir, "lfs_eval", "lfs-test.db")
-	fmt.Printf("  # %s\n", config.GetConfigPath())
-	fmt.Printf("  database: %s\n", defaultDB)
-	fmt.Printf("  remote_host: gojira\n")
-	fmt.Printf("  auto_remote: true\n\n")
+
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+		lfst-config - Manage LFS test configuration
+
+		Version: %s
+
+		DESCRIPTION:
+		  Manages configuration for LFS test commands. Configuration is stored in
+		  ~/.lfs-test-config by default and can be overridden with environment variables.
+
+		USAGE:
+		  lfst-config [OPTIONS] SUBCOMMAND
+
+		SUBCOMMANDS:
+		  init          Create default configuration file
+		  set KEY VAL   Set a configuration value
+		  get KEY       Get a configuration value
+		  show          Display all configuration values
+		  path          Show the config file path
+
+		CONFIGURATION KEYS:
+		  database      Path to SQLite database
+		                Default: /home/$USER/lfs_eval/lfs-test.db
+
+		  remote_host   Remote host for SSH operations
+		                Default: gojira
+
+		  auto_remote   Automatically detect remote execution
+		                Default: true
+
+		ENVIRONMENT VARIABLES:
+		  LFS_TEST_CONFIG    Path to config file
+		  LFS_TEST_DB        Override database path
+		  LFS_REMOTE_HOST    Override remote host
+		  LFS_AUTO_REMOTE    Override auto_remote (true/false)
+
+		OPTIONS:
+		`, version)))
+	pflag.PrintDefaults()
+
+	fmt.Print(dedent.Dedent(fmt.Sprintf(`
+
+		EXAMPLES:
+		  # Create default config
+		  lfst-config init
+
+		  # Set custom database path
+		  lfst-config set database /mnt/o/lfs-test.db
+
+		  # Set remote host
+		  lfst-config set remote_host myserver
+
+		  # Disable auto-remote detection
+		  lfst-config set auto_remote false
+
+		  # View all configuration
+		  lfst-config show
+
+		  # Get specific value
+		  lfst-config get database
+
+		  # Find config file location
+		  lfst-config path
+
+		CONFIG FILE FORMAT:
+		  # %s
+		  database: %s
+		  remote_host: gojira
+		  auto_remote: true
+
+		`, config.GetConfigPath(), defaultDB)))
 }
