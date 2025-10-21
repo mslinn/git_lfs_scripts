@@ -14,6 +14,8 @@ import (
 	"github.com/mslinn/git_lfs_scripts/pkg/checksum"
 	"github.com/mslinn/git_lfs_scripts/pkg/database"
 	"github.com/mslinn/git_lfs_scripts/pkg/git"
+	"github.com/mslinn/git_lfs_scripts/pkg/report"
+	"github.com/mslinn/git_lfs_scripts/pkg/serverinfo"
 	"github.com/mslinn/git_lfs_scripts/pkg/testdata"
 	"github.com/mslinn/git_lfs_scripts/pkg/timing"
 )
@@ -55,15 +57,16 @@ func GetScenario(id int) (*Scenario, error) {
 
 // Runner executes a scenario
 type Runner struct {
-	Scenario  *Scenario
-	DB        *database.DB
-	RunID     int64
-	Debug     bool
-	Force     bool   // Force recreation of existing repositories
-	WorkDir   string // Base directory for test operations
-	RepoDir   string // Repository directory (WorkDir/repo)
-	Repo2Dir  string // Second clone directory (WorkDir/repo2)
-	GitHubURL string // GitHub clone URL (set during execution if created)
+	Scenario   *Scenario
+	DB         *database.DB
+	RunID      int64
+	Debug      bool
+	Force      bool   // Force recreation of existing repositories
+	WorkDir    string // Base directory for test operations
+	RepoDir    string // Repository directory (WorkDir/repo)
+	Repo2Dir   string // Second clone directory (WorkDir/repo2)
+	GitHubURL  string // GitHub clone URL (set during execution if created)
+	ReportPath string // Path to save markdown report (optional)
 }
 
 // NewRunner creates a new scenario runner
@@ -111,6 +114,23 @@ func (r *Runner) Execute() error {
 		fmt.Printf("Created test run ID: %d\n\n", r.RunID)
 	}
 
+	// Collect server information
+	if r.Debug {
+		fmt.Println("Collecting server information...")
+	}
+	collected, err := serverinfo.CollectServerInfo(r.Scenario.ServerURL, r.RunID, r.Debug)
+	if err != nil {
+		if r.Debug {
+			fmt.Printf("Warning: failed to collect server info: %v\n", err)
+		}
+	} else {
+		if err := serverinfo.StoreCollectedInfo(r.DB, collected); err != nil {
+			if r.Debug {
+				fmt.Printf("Warning: failed to store server info: %v\n", err)
+			}
+		}
+	}
+
 	// Execute each step
 	steps := []func() error{
 		r.Step1_Setup,
@@ -155,7 +175,14 @@ func (r *Runner) Execute() error {
 	}
 
 	if r.Debug {
-		fmt.Printf("=== Scenario %d Complete ===\n", r.Scenario.ID)
+		fmt.Printf("=== Scenario %d Complete ===\n\n", r.Scenario.ID)
+	}
+
+	// Generate report
+	if err := r.generateReport(); err != nil {
+		if r.Debug {
+			fmt.Printf("Warning: failed to generate report: %v\n", err)
+		}
 	}
 
 	return nil
@@ -1025,6 +1052,28 @@ func checkServerConnectivity(serverURL, serverType string, timeout time.Duration
 		if debug {
 			fmt.Printf("  HTTP response status: %d\n", resp.StatusCode)
 		}
+	}
+
+	return nil
+}
+
+// generateReport generates a markdown report for the test run
+func (r *Runner) generateReport() error {
+	if r.Debug {
+		fmt.Println("Generating test report...")
+	}
+
+	// Determine output path
+	outputPath := r.ReportPath
+	if outputPath == "" {
+		// Default to WorkDir/report-{runID}.md
+		outputPath = filepath.Join(r.WorkDir, fmt.Sprintf("report-%d.md", r.RunID))
+	}
+
+	// Generate report
+	gen := report.NewGenerator(r.DB, r.RunID, outputPath)
+	if err := gen.Generate(); err != nil {
+		return err
 	}
 
 	return nil

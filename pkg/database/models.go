@@ -50,3 +50,32 @@ type RepositorySize struct {
 	FileCount  *int
 	MeasuredAt time.Time
 }
+
+// ServerInfo represents server system information
+type ServerInfo struct {
+	ID            int64
+	RunID         int64
+	Hostname      string
+	OSInfo        string
+	KernelVersion string
+	CollectedAt   time.Time
+}
+
+// ServerEnvVar represents a server environment variable
+type ServerEnvVar struct {
+	ID          int64
+	RunID       int64
+	VarName     string
+	VarValue    string
+	CollectedAt time.Time
+}
+
+// ServerProcess represents a running process on the server
+type ServerProcess struct {
+	ID          int64
+	RunID       int64
+	PID         *int
+	ProcessName string
+	CommandLine string
+	CollectedAt time.Time
+}

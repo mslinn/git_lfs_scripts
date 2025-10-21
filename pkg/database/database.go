@@ -343,3 +343,148 @@ func (db *DB) QueryRaw(query string, args ...interface{}) (*sql.Rows, error) {
 func (db *DB) QueryRowRaw(query string, args ...interface{}) *sql.Row {
 	return db.conn.QueryRow(query, args...)
 }
+
+// CreateServerInfo creates a new server info record
+func (db *DB) CreateServerInfo(si *ServerInfo) error {
+	result, err := db.conn.Exec(`
+		INSERT INTO server_info (run_id, hostname, os_info, kernel_version, collected_at)
+		VALUES (?, ?, ?, ?, ?)`,
+		si.RunID, si.Hostname, si.OSInfo, si.KernelVersion,
+		si.CollectedAt.Format(time.RFC3339),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create server info: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert id: %w", err)
+	}
+
+	si.ID = id
+	return nil
+}
+
+// GetServerInfo retrieves server info for a test run
+func (db *DB) GetServerInfo(runID int64) (*ServerInfo, error) {
+	var si ServerInfo
+	var collectedAt string
+
+	err := db.conn.QueryRow(`
+		SELECT id, run_id, hostname, os_info, kernel_version, collected_at
+		FROM server_info WHERE run_id = ?`, runID,
+	).Scan(
+		&si.ID, &si.RunID, &si.Hostname, &si.OSInfo, &si.KernelVersion, &collectedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No server info recorded
+		}
+		return nil, fmt.Errorf("failed to get server info: %w", err)
+	}
+
+	si.CollectedAt, _ = time.Parse(time.RFC3339, collectedAt)
+	return &si, nil
+}
+
+// CreateServerEnvVar creates a new server environment variable record
+func (db *DB) CreateServerEnvVar(sev *ServerEnvVar) error {
+	result, err := db.conn.Exec(`
+		INSERT INTO server_env_vars (run_id, var_name, var_value, collected_at)
+		VALUES (?, ?, ?, ?)`,
+		sev.RunID, sev.VarName, sev.VarValue,
+		sev.CollectedAt.Format(time.RFC3339),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create server env var: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert id: %w", err)
+	}
+
+	sev.ID = id
+	return nil
+}
+
+// ListServerEnvVars lists all environment variables for a test run
+func (db *DB) ListServerEnvVars(runID int64) ([]*ServerEnvVar, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, run_id, var_name, var_value, collected_at
+		FROM server_env_vars WHERE run_id = ? ORDER BY var_name`, runID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list server env vars: %w", err)
+	}
+	defer rows.Close()
+
+	var vars []*ServerEnvVar
+	for rows.Next() {
+		var sev ServerEnvVar
+		var collectedAt string
+
+		err := rows.Scan(
+			&sev.ID, &sev.RunID, &sev.VarName, &sev.VarValue, &collectedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan server env var: %w", err)
+		}
+
+		sev.CollectedAt, _ = time.Parse(time.RFC3339, collectedAt)
+		vars = append(vars, &sev)
+	}
+
+	return vars, nil
+}
+
+// CreateServerProcess creates a new server process record
+func (db *DB) CreateServerProcess(sp *ServerProcess) error {
+	result, err := db.conn.Exec(`
+		INSERT INTO server_processes (run_id, pid, process_name, command_line, collected_at)
+		VALUES (?, ?, ?, ?, ?)`,
+		sp.RunID, sp.PID, sp.ProcessName, sp.CommandLine,
+		sp.CollectedAt.Format(time.RFC3339),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create server process: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert id: %w", err)
+	}
+
+	sp.ID = id
+	return nil
+}
+
+// ListServerProcesses lists all processes for a test run
+func (db *DB) ListServerProcesses(runID int64) ([]*ServerProcess, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, run_id, pid, process_name, command_line, collected_at
+		FROM server_processes WHERE run_id = ? ORDER BY process_name`, runID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list server processes: %w", err)
+	}
+	defer rows.Close()
+
+	var processes []*ServerProcess
+	for rows.Next() {
+		var sp ServerProcess
+		var collectedAt string
+
+		err := rows.Scan(
+			&sp.ID, &sp.RunID, &sp.PID, &sp.ProcessName, &sp.CommandLine, &collectedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan server process: %w", err)
+		}
+
+		sp.CollectedAt, _ = time.Parse(time.RFC3339, collectedAt)
+		processes = append(processes, &sp)
+	}
+
+	return processes, nil
+}

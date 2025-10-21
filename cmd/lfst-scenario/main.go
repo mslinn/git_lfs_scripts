@@ -28,13 +28,13 @@ func main() {
 		listOnly    bool
 	)
 
-	pflag.StringVar(&dbPath,     "db",       "",          "Path to SQLite database (default from config)")
-	pflag.BoolVarP(&force,       "force",    "f", false,  "Force recreation of existing repositories")
-	pflag.BoolVarP(&showHelp,    "help",     "h", false,  "Show this help message")
-	pflag.BoolVarP(&listOnly,    "list",     "L", false,  "List available scenarios and exit")
-	pflag.BoolVarP(&verbose,     "verbose",  "v", false,  "Enable verbose output")
-	pflag.BoolVarP(&showVersion, "version",  "V", false,  "Show version and exit")
-	pflag.StringVar(&workDir,    "work-dir", "/tmp/lfst", "Working directory for test execution")
+	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
+	pflag.BoolVarP(&force, "force", "f", false, "Force recreation of existing repositories")
+	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
+	pflag.BoolVarP(&listOnly, "list", "L", false, "List available scenarios and exit")
+	pflag.BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
+	pflag.StringVar(&workDir, "work-dir", "/tmp/lfst", "Working directory for test execution")
 
 	pflag.Parse()
 
@@ -145,9 +145,9 @@ func listScenarios() {
 }
 
 func printUsage(msg string) {
-  if msg != "" {
-    fmt.Fprint(os.Stderr, msg + "\n")
-  }
+	if msg != "" {
+		fmt.Fprint(os.Stderr, msg+"\n")
+	}
 	fmt.Fprint(os.Stderr, dedent.Dedent(`
   Run a complete Git LFS test scenario (all 7 steps)
 

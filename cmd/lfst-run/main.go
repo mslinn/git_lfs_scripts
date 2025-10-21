@@ -25,9 +25,9 @@ func main() {
 	)
 
 	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp,    "help",    "h", false, "Show this help message")
-	pflag.BoolVarP(&debug,       "debug",   "d", false, "Enable debug output")
-	pflag.BoolVarP(&debug,       "verbose", "v", false, "Enable verbose output (alias for --debug)")
+	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
+	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
+	pflag.BoolVarP(&debug, "verbose", "v", false, "Enable verbose output (alias for --debug)")
 	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
 
 	// Stop parsing at first non-flag argument (the subcommand)
@@ -93,7 +93,7 @@ func main() {
 func handleCreate(db *database.DB, args []string, debug bool) {
 	fs := pflag.NewFlagSet("create", pflag.ExitOnError)
 	scenarioID := fs.Int("scenario", 0, "Scenario ID (required)")
-	notes      := fs.String("notes", "", "Optional notes about this test run")
+	notes := fs.String("notes", "", "Optional notes about this test run")
 
 	fs.Parse(args)
 
@@ -460,7 +460,7 @@ func printHelp() {
 		  -d, --debug        Enable debug output
 		  -v, --verbose      Enable verbose output (alias for --debug)
 		  --db PATH          Path to SQLite database
-		  --scenario id      Specify test scenario
+		  --scenario id      Scenario ID (required)
 
 		EXAMPLES:
 		  # List available scenarios
