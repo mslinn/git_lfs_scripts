@@ -5,6 +5,7 @@ This document describes how to configure lfs-test-server on gojira for automated
 ## Overview
 
 For automated testing, lfs-test-server must be configured with:
+
 1. Admin interface enabled (to manage users)
 2. A test user account created
 3. Client credentials embedded in LFS URL
@@ -28,8 +29,8 @@ cd /opt/lfs-test-server
 # Kill any existing instance
 pkill -f lfs-test-server
 
-# Start server in background
-nohup ~/go/bin/lfs-test-server -addr :8080 > lfs-server.log 2>&1 &
+# Start server in background with verbose logging
+nohup ~/go/bin/lfs-test-server -verbose -addr :8080 > lfs-server.log 2>&1 &
 
 echo "LFS Test Server started on port 8080"
 echo "Admin interface: http://gojira:8080/mgmt"
@@ -38,6 +39,7 @@ echo "Log file: /opt/lfs-test-server/lfs-server.log"
 ```
 
 Make it executable:
+
 ```bash
 chmod +x /opt/lfs-test-server/start-lfs-server.sh
 ```
@@ -45,6 +47,7 @@ chmod +x /opt/lfs-test-server/start-lfs-server.sh
 ### 2. Start the Server
 
 On gojira:
+
 ```bash
 /opt/lfs-test-server/start-lfs-server.sh
 ```
