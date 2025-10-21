@@ -1,7 +1,6 @@
 package scenario
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -808,16 +807,8 @@ func (r *Runner) checkLFSConfiguration() error {
 				fmt.Println("    This scenario may require a local bare repository to be set up manually")
 			}
 			// For now, just warn - these scenarios may not be fully implemented
-			return errors.New(dedent.Dedent(fmt.Sprintf(`
-				scenario %d (%s) is not yet fully implemented
-
-				Scenarios with bare repositories require:
-				  1. A bare git repository to be created
-				  2. LFS storage configuration
-				  3. Appropriate git remotes
-
-				Please use scenarios 6-7 (LFS Test Server) which are fully implemented
-				`, r.Scenario.ID, r.Scenario.Name)))
+			return fmt.Errorf("scenario %d (%s) is not yet fully implemented\n\nScenarios with bare repositories require:\n  1. A bare git repository to be created\n  2. LFS storage configuration\n  3. Appropriate git remotes\n\nPlease use scenarios 6-7 (LFS Test Server) which are fully implemented",
+				r.Scenario.ID, r.Scenario.Name)
 		}
 	}
 
@@ -900,17 +891,8 @@ func checkServerConnectivity(serverURL, serverType string, timeout time.Duration
 	conn, err := net.DialTimeout("tcp", host, timeout)
 	if err != nil {
 		startupInstructions := getServerStartupInstructions(serverType, serverURL)
-		return errors.New(dedent.Dedent(fmt.Sprintf(`
-			LFS server not reachable at %s (timeout after %.0fs)
-
-			%s
-			Please ensure:
-			  1. The LFS server is running (see instructions above)
-			  2. The hostname/IP is correct
-			  3. Network connectivity is available
-
-			Error: %v
-			`, serverURL, timeout.Seconds(), startupInstructions, err)))
+		return fmt.Errorf("LFS server not reachable at %s (timeout after %.0fs)\n\n%s\nPlease ensure:\n  1. The LFS server is running (see instructions above)\n  2. The hostname/IP is correct\n  3. Network connectivity is available\n\nError: %v",
+			serverURL, timeout.Seconds(), startupInstructions, err)
 	}
 	conn.Close()
 
@@ -925,14 +907,8 @@ func checkServerConnectivity(serverURL, serverType string, timeout time.Duration
 		resp, err := client.Get(serverURL)
 		if err != nil {
 			startupInstructions := getServerStartupInstructions(serverType, serverURL)
-			return errors.New(dedent.Dedent(fmt.Sprintf(`
-				LFS server at %s is not responding to HTTP requests (timeout after %.0fs)
-
-				%s
-				Please ensure the LFS server is running and configured correctly.
-
-				Error: %v
-				`, serverURL, timeout.Seconds(), startupInstructions, err)))
+			return fmt.Errorf("LFS server at %s is not responding to HTTP requests (timeout after %.0fs)\n\n%s\nPlease ensure the LFS server is running and configured correctly.\n\nError: %v",
+				serverURL, timeout.Seconds(), startupInstructions, err)
 		}
 		resp.Body.Close()
 
