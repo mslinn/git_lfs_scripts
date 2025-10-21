@@ -200,7 +200,31 @@ Data includes: Big Buck Bunny videos (CC BY 3.0), Project Gutenberg archives, NY
 
 ### LFS Server Configuration
 
-**IMPORTANT - Verbose Mode Requirement:**
+**IMPORTANT - Setup Required for Automated Testing:**
+
+For automated testing without user prompts, lfs-test-server must be configured with authentication. See the detailed setup guide: `docs/lfs-server-setup.md`
+
+**Quick Setup Summary:**
+
+1. Start lfs-test-server with admin interface enabled:
+
+   ```bash
+   ssh gojira /opt/lfs-test-server/start-lfs-server.sh
+   ```
+
+2. The startup script configures:
+   - Admin interface with credentials: admin/admin123
+   - Test user for LFS operations: testuser/testpass
+   - Content storage at /opt/lfs-test-server
+   - Server listening on port 8080
+
+3. Scenarios 6 and 7 automatically use embedded credentials in the LFS URL:
+
+   ```text
+   http://testuser:testpass@gojira:8080
+   ```
+
+**Verbose Mode Requirement:**
 
 All Git LFS servers should be configured to run in verbose mode during testing. This provides essential verification that tests are performing the operations they claim to perform.
 
@@ -219,26 +243,14 @@ All Git LFS servers should be configured to run in verbose mode during testing. 
 - **Rudolfs**: Use `-v` or `--verbose` flag, or set `RUST_LOG=debug`
 - **Git LFS on bare repos**: Set `GIT_TRACE=1` and `GIT_CURL_VERBOSE=1` environment variables
 
-**User Instructions:**
-
-When documenting test procedures, always include instructions to:
-
-
-1. Start the LFS server in verbose mode before running tests
-2. Monitor server logs in a separate terminal window during test execution
-3. Verify that server logs show expected operations (uploads, downloads, batch requests)
-4. Compare client-side test output with server-side log evidence
-
-
-Example setup for lfs-test-server on gojira:
+**Monitoring Server Logs:**
 
 ```bash
 # On server (gojira)
-lfs-test-server -verbose -addr :8080
+ssh gojira "tail -f /opt/lfs-test-server/lfs-server.log"
 
-# On client (bear/camille) - in separate terminals
-tail -f /var/log/lfs-server.log  # Monitor logs
-bin/lfst-scenario 6 -v            # Run test
+# On client (bear/camille)
+bin/lfst-scenario 6 -v  # Run test
 ```
 
 This ensures transparency and verifiability of all test operations.

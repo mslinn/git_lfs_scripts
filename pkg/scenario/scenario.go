@@ -36,8 +36,8 @@ func GetScenarios() map[int]*Scenario {
 	return map[int]*Scenario{
 		1:  {ID: 1, Name: "Bare repo - local", ServerType: "bare", Protocol: "local", GitServer: "bare"},
 		2:  {ID: 2, Name: "Bare repo - SSH", ServerType: "bare", Protocol: "ssh", GitServer: "bare"},
-		6:  {ID: 6, Name: "LFS Test Server - HTTP", ServerType: "lfs-test-server", Protocol: "http", GitServer: "bare", ServerURL: "http://gojira:8080"},
-		7:  {ID: 7, Name: "LFS Test Server - HTTP/GitHub", ServerType: "lfs-test-server", Protocol: "http", GitServer: "github", ServerURL: "http://gojira:8080", RepoName: "mslinn/lfs-eval-test"},
+		6:  {ID: 6, Name: "LFS Test Server - HTTP", ServerType: "lfs-test-server", Protocol: "http", GitServer: "bare", ServerURL: "http://testuser:testpass@gojira:8080"},
+		7:  {ID: 7, Name: "LFS Test Server - HTTP/GitHub", ServerType: "lfs-test-server", Protocol: "http", GitServer: "github", ServerURL: "http://testuser:testpass@gojira:8080", RepoName: "mslinn/lfs-eval-test"},
 		8:  {ID: 8, Name: "Giftless - local", ServerType: "giftless", Protocol: "local", GitServer: "bare"},
 		9:  {ID: 9, Name: "Giftless - SSH", ServerType: "giftless", Protocol: "ssh", GitServer: "bare"},
 		13: {ID: 13, Name: "Rudolfs - local", ServerType: "rudolfs", Protocol: "local", GitServer: "bare"},
