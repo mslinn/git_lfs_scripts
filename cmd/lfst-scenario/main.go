@@ -13,38 +13,25 @@ import (
 
 var version = "dev" // Set by -ldflags during build
 
-// Predefined scenarios based on gitScenarios.html
-var scenarios = map[int]*scenario.Scenario{
-	1:  {ID: 1, Name: "Bare repo - local", ServerType: "bare", Protocol: "local", GitServer: "bare"},
-	2:  {ID: 2, Name: "Bare repo - SSH", ServerType: "bare", Protocol: "ssh", GitServer: "bare"},
-	6:  {ID: 6, Name: "LFS Test Server - HTTP", ServerType: "lfs-test-server", Protocol: "http", GitServer: "bare", ServerURL: "http://gojira:8080"},
-	7:  {ID: 7, Name: "LFS Test Server - HTTP/GitHub", ServerType: "lfs-test-server", Protocol: "http", GitServer: "github", ServerURL: "http://gojira:8080", RepoName: "mslinn/lfs-eval-test"},
-	8:  {ID: 8, Name: "Giftless - local", ServerType: "giftless", Protocol: "local", GitServer: "bare"},
-	9:  {ID: 9, Name: "Giftless - SSH", ServerType: "giftless", Protocol: "ssh", GitServer: "bare"},
-	13: {ID: 13, Name: "Rudolfs - local", ServerType: "rudolfs", Protocol: "local", GitServer: "bare"},
-	14: {ID: 14, Name: "Rudolfs - SSH", ServerType: "rudolfs", Protocol: "ssh", GitServer: "bare"},
-}
-
 func main() {
 	// Define flags
 	var (
 		showVersion bool
 		showHelp    bool
-		debug       bool
+		verbose     bool
 		force       bool
 		dbPath      string
 		workDir     string
 		listOnly    bool
 	)
 
-	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
-	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
-	pflag.BoolVarP(&debug, "verbose", "v", false, "Enable verbose output (alias for --debug)")
-	pflag.BoolVarP(&force, "force", "f", false, "Force recreation of existing repositories")
-	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
-	pflag.StringVar(&workDir, "work-dir", "/tmp/lfst", "Working directory for test execution")
-	pflag.BoolVar(&listOnly, "list", false, "List available scenarios and exit")
+	pflag.BoolVarP(&showVersion, "version",  "V", false, "Show version and exit")
+	pflag.BoolVarP(&showHelp,    "help",     "h", false, "Show this help message")
+	pflag.BoolVarP(&verbose,     "verbose",  "v", false, "Enable verbose output")
+	pflag.BoolVarP(&force,       "force",    "f", false, "Force recreation of existing repositories")
+	pflag.StringVar(&dbPath,     "db",       "", "Path to SQLite database (default from config)")
+	pflag.StringVar(&workDir,    "work-dir", "/tmp/lfst", "Working directory for test execution")
+	pflag.BoolVarP(&listOnly,    "list",     "L", false, "List available scenarios and exit")
 
 	pflag.Parse()
 
@@ -81,9 +68,9 @@ func main() {
 	}
 
 	// Get scenario
-	scen, ok := scenarios[scenarioID]
-	if !ok {
-		fmt.Fprintf(os.Stderr, "Error: scenario %d not found (use --list to see available scenarios)\n", scenarioID)
+	scen, err := scenario.GetScenario(scenarioID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v (use --list to see available scenarios)\n", err)
 		os.Exit(1)
 	}
 
@@ -108,7 +95,7 @@ func main() {
 	defer db.Close()
 
 	// Create and run scenario
-	runner := scenario.NewRunner(scen, db, workDir, debug, force)
+	runner := scenario.NewRunner(scen, db, workDir, verbose, force)
 	if err := runner.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
 		os.Exit(1)
@@ -120,6 +107,7 @@ func main() {
 }
 
 func listScenarios() {
+	scenarios := scenario.GetScenarios()
 	fmt.Println("Available scenarios:")
 	fmt.Println()
 	fmt.Println("ID  Server             Protocol  Git Server  Description")
@@ -175,8 +163,8 @@ func printHelp() {
 	fmt.Printf("  # Run scenario 6 (LFS Test Server - HTTP)\n")
 	fmt.Printf("  lfst-scenario 6\n\n")
 
-	fmt.Printf("  # Run with debug output\n")
-	fmt.Printf("  lfst-scenario -d 6\n\n")
+	fmt.Printf("  # Run with verbose output\n")
+	fmt.Printf("  lfst-scenario -v 6\n\n")
 
 	fmt.Printf("  # Use custom work directory\n")
 	fmt.Printf("  lfst-scenario --work-dir /mnt/o/lfs_test 6\n\n")

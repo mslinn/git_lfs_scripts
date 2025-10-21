@@ -23,9 +23,9 @@ func main() {
 	)
 
 	pflag.BoolVarP(&showVersion, "version", "V", false, "Show version and exit")
-	pflag.BoolVarP(&showHelp, "help", "h", false, "Show this help message")
-	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
-	pflag.BoolVarP(&debug, "verbose", "v", false, "Enable verbose output (alias for --debug)")
+	pflag.BoolVarP(&showHelp,    "help",    "h", false, "Show this help message")
+	pflag.BoolVarP(&debug,       "debug",   "d", false, "Enable debug output")
+	pflag.BoolVarP(&debug,       "verbose", "v", false, "Enable verbose output (alias for --debug)")
 	pflag.StringVar(&dbPath, "db", "", "Path to SQLite database (default from config)")
 
 	// Stop parsing at first non-flag argument (the subcommand)
@@ -92,9 +92,9 @@ func handleCreate(db *database.DB, args []string, debug bool) {
 	fs := pflag.NewFlagSet("create", pflag.ExitOnError)
 	scenarioID := fs.Int("scenario", 0, "Scenario ID (required)")
 	serverType := fs.String("server", "", "Server type: lfs-test-server, giftless, rudolfs, bare (required)")
-	protocol := fs.String("protocol", "", "Protocol: http, https, ssh, local (required)")
-	gitServer := fs.String("git-server", "bare", "Git server: bare, github")
-	notes := fs.String("notes", "", "Optional notes about this test run")
+	protocol   := fs.String("protocol", "", "Protocol: http, https, ssh, local (required)")
+	gitServer  := fs.String("git-server", "bare", "Git server: bare, github")
+	notes      := fs.String("notes", "", "Optional notes about this test run")
 
 	fs.Parse(args)
 

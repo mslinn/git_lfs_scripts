@@ -23,6 +23,30 @@ type Scenario struct {
 	RepoName   string // GitHub repository name (e.g., "username/lfs-eval-test")
 }
 
+// GetScenarios returns the predefined scenarios map based on gitScenarios.html
+func GetScenarios() map[int]*Scenario {
+	return map[int]*Scenario{
+		1:  {ID: 1, Name: "Bare repo - local", ServerType: "bare", Protocol: "local", GitServer: "bare"},
+		2:  {ID: 2, Name: "Bare repo - SSH", ServerType: "bare", Protocol: "ssh", GitServer: "bare"},
+		6:  {ID: 6, Name: "LFS Test Server - HTTP", ServerType: "lfs-test-server", Protocol: "http", GitServer: "bare", ServerURL: "http://gojira:8080"},
+		7:  {ID: 7, Name: "LFS Test Server - HTTP/GitHub", ServerType: "lfs-test-server", Protocol: "http", GitServer: "github", ServerURL: "http://gojira:8080", RepoName: "mslinn/lfs-eval-test"},
+		8:  {ID: 8, Name: "Giftless - local", ServerType: "giftless", Protocol: "local", GitServer: "bare"},
+		9:  {ID: 9, Name: "Giftless - SSH", ServerType: "giftless", Protocol: "ssh", GitServer: "bare"},
+		13: {ID: 13, Name: "Rudolfs - local", ServerType: "rudolfs", Protocol: "local", GitServer: "bare"},
+		14: {ID: 14, Name: "Rudolfs - SSH", ServerType: "rudolfs", Protocol: "ssh", GitServer: "bare"},
+	}
+}
+
+// GetScenario returns a single scenario by ID, or error if not found
+func GetScenario(id int) (*Scenario, error) {
+	scenarios := GetScenarios()
+	scenario, ok := scenarios[id]
+	if !ok {
+		return nil, fmt.Errorf("scenario %d not found", id)
+	}
+	return scenario, nil
+}
+
 // Runner executes a scenario
 type Runner struct {
 	Scenario   *Scenario
