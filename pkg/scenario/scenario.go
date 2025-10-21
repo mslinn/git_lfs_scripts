@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/lithammer/dedent"
@@ -788,11 +789,16 @@ func (r *Runner) validatePrerequisites() error {
 }
 
 // checkLFSConfiguration validates LFS setup for the scenario type.
-// For scenarios with ServerURL, checks server connectivity with short timeout.
+// For scenarios with ServerURL, checks server configuration and connectivity.
 // For scenarios without ServerURL, warns about implementation status.
 func (r *Runner) checkLFSConfiguration() error {
 	if r.Scenario.ServerURL != "" {
-		// Scenario has an LFS server URL - check connectivity
+		// Validate server-specific configuration before checking connectivity
+		if err := r.validateServerConfiguration(); err != nil {
+			return err
+		}
+
+		// Check server connectivity with short timeout
 		if err := checkServerConnectivity(r.Scenario.ServerURL, r.Scenario.ServerType, 2*time.Second, r.Debug); err != nil {
 			return err
 		}
@@ -815,6 +821,110 @@ func (r *Runner) checkLFSConfiguration() error {
 	return nil
 }
 
+// validateServerConfiguration validates server-specific requirements for the scenario.
+// This checks the server's own configuration, not lfst configuration.
+func (r *Runner) validateServerConfiguration() error {
+	parsedURL, _ := url.Parse(r.Scenario.ServerURL)
+	hostname := parsedURL.Hostname()
+
+	if r.Debug {
+		fmt.Printf("  Validating %s configuration on %s...\n", r.Scenario.ServerType, hostname)
+	}
+
+	switch r.Scenario.ServerType {
+	case "lfs-test-server":
+		return validateLFSTestServer(hostname, r.Debug)
+	case "giftless":
+		return validateGiftless(hostname, r.Debug)
+	case "rudolfs":
+		return validateRudolfs(hostname, r.Debug)
+	default:
+		// Unknown server type, skip validation
+		if r.Debug {
+			fmt.Printf("  ⚠ Unknown server type '%s', skipping configuration validation\n", r.Scenario.ServerType)
+		}
+	}
+
+	return nil
+}
+
+// validateLFSTestServer checks if lfs-test-server is properly configured on the remote host.
+func validateLFSTestServer(hostname string, debug bool) error {
+	// Check if lfs-test-server binary exists in PATH or standard location
+	result := timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "which lfs-test-server || test -x /home/mslinn/go/bin/lfs-test-server"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("lfs-test-server binary not found on %s\n\nPlease ensure:\n  1. lfs-test-server is installed (go install github.com/git-lfs/lfs-test-server@latest)\n  2. Binary is in PATH or at /home/mslinn/go/bin/lfs-test-server\n\nSee: https://github.com/git-lfs/lfs-test-server#installation",
+			hostname)
+	}
+
+	// Check if LFS_CONTENTPATH env var or data directory exists
+	// lfs-test-server uses $LFS_CONTENTPATH or ./lfs-test-server-content by default
+	result = timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "test -d /opt/lfs-test-server || echo 'missing'"}, nil)
+	if strings.Contains(result.Stdout, "missing") {
+		return fmt.Errorf("lfs-test-server data directory not found on %s\n\nPlease create the data directory:\n  ssh %s\n  sudo mkdir -p /opt/lfs-test-server\n  sudo chown $USER:$USER /opt/lfs-test-server\n\nOr set LFS_CONTENTPATH env var on %s to an existing directory",
+			hostname, hostname, hostname)
+	}
+
+	// Check if data directory is writable
+	result = timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "test -w /opt/lfs-test-server"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("lfs-test-server data directory /opt/lfs-test-server on %s is not writable\n\nFix permissions:\n  ssh %s\n  sudo chown $USER:$USER /opt/lfs-test-server\n  chmod 755 /opt/lfs-test-server",
+			hostname, hostname)
+	}
+
+	if debug {
+		fmt.Printf("  ✓ lfs-test-server configuration validated\n")
+	}
+
+	return nil
+}
+
+// validateGiftless checks if giftless is properly configured on the remote host.
+func validateGiftless(hostname string, debug bool) error {
+	// Check if giftless is installed
+	result := timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "which giftless || test -x /work/git/giftless/venv/bin/giftless"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("giftless not found on %s\n\nPlease install giftless:\n  ssh %s\n  cd /work/git\n  git clone https://github.com/datopian/giftless.git\n  cd giftless\n  python3 -m venv venv\n  source venv/bin/activate\n  pip install -e .\n\nSee: https://github.com/datopian/giftless#installation",
+			hostname, hostname)
+	}
+
+	// Check if giftless config exists
+	result = timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "test -f /work/git/giftless/giftless.yaml"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("giftless configuration file not found on %s\n\nCreate /work/git/giftless/giftless.yaml with storage backend configuration\n\nSee: https://github.com/datopian/giftless#configuration",
+			hostname)
+	}
+
+	if debug {
+		fmt.Printf("  ✓ giftless configuration validated\n")
+	}
+
+	return nil
+}
+
+// validateRudolfs checks if rudolfs is properly configured on the remote host.
+func validateRudolfs(hostname string, debug bool) error {
+	// Check if rudolfs binary exists
+	result := timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "which rudolfs || test -x /work/git/rudolfs/target/release/rudolfs"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("rudolfs not found on %s\n\nPlease install rudolfs:\n  ssh %s\n  cd /work/git\n  git clone https://github.com/jasonwhite/rudolfs.git\n  cd rudolfs\n  cargo build --release\n\nSee: https://github.com/jasonwhite/rudolfs#building",
+			hostname, hostname)
+	}
+
+	// Check if rudolfs storage directory exists
+	result = timing.Run("ssh", []string{"-o", "ConnectTimeout=5", hostname, "test -d /work/git/rudolfs/data"}, nil)
+	if result.ExitCode != 0 {
+		return fmt.Errorf("rudolfs data directory not found on %s\n\nCreate storage directory:\n  ssh %s\n  mkdir -p /work/git/rudolfs/data",
+			hostname, hostname)
+	}
+
+	if debug {
+		fmt.Printf("  ✓ rudolfs configuration validated\n")
+	}
+
+	return nil
+}
+
 // getServerStartupInstructions returns server-specific startup instructions.
 func getServerStartupInstructions(serverType, serverURL string) string {
 	parsedURL, _ := url.Parse(serverURL)
@@ -825,8 +935,8 @@ func getServerStartupInstructions(serverType, serverURL string) string {
 		return dedent.Dedent(fmt.Sprintf(`
 			To start the LFS Test Server on %s:
 			  ssh %s
-			  cd /work/git/lfs-test-server
-			  ./lfs-test-server -addr :8080
+			  export LFS_CONTENTPATH=/opt/lfs-test-server
+			  ~/go/bin/lfs-test-server -addr :8080
 
 			Or see: https://github.com/git-lfs/lfs-test-server
 			`, hostname, hostname))
