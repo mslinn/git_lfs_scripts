@@ -87,6 +87,9 @@ func (r *Runner) Execute() error {
 	if r.Debug {
 		fmt.Printf("\n=== Executing Scenario %d: %s ===\n", r.Scenario.ID, r.Scenario.Name)
 		fmt.Printf("Server: %s via %s\n", r.Scenario.ServerType, r.Scenario.Protocol)
+		if r.Scenario.ServerURL != "" {
+			fmt.Printf("Server URL: %s\n", r.Scenario.ServerURL)
+		}
 		fmt.Printf("Work directory: %s\n\n", r.WorkDir)
 	}
 
