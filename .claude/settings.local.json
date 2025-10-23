@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /mnt/f/work/git/git_lfs_scripts show --stat b8ec4fd)",
+      "Bash(lfst-run list:*)",
+      "Bash(lfst-scenario --detail:*)",
+      "Bash(npx ccusage:*)",
+      "Bash(sqlite3:*)",
+      "Read(//tmp/test-lfs-push/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
